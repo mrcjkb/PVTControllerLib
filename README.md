@@ -4,7 +4,7 @@ IEC 61499 function block library for building forecast based energy system contr
 # Requires
 * Any IEC 61499 compliant tool
 * Full list of tools: http://www.iec61499.de/tools.htm
-​* The 4diac function block library: https://www.eclipse.org/4diac/en_lib.php
+* The 4diac function block library: https://www.eclipse.org/4diac/en_lib.php
 
 # Installation in 4diac
 * https://www.eclipse.org/4diac/
