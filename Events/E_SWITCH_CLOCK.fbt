@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Switches between EI1 and EI2 to trigger EO (starting with EI1)" Name="E_SWITCH_CLOCK">
+  <Identification Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-06-12" Organization="HTW Berlin" Version="0.0"/>
+  <VersionInfo Author="AZ" Date="2016-05-26" Organization="fortiss GmbH" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Input event 1" Name="EI1" Type="Event">
+        <With Var="SI1"/>
+        <With Var="SI2"/>
+      </Event>
+      <Event Comment="Input event 2" Name="EI2" Type="Event">
+        <With Var="SI1"/>
+        <With Var="SI2"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Output event" Name="EO" Type="Event"/>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Switch to E2 after SI1 arrivals of EI1" Name="SI1" Type="UINT"/>
+      <VarDeclaration Comment="Switch to E1 after SI1 arrivals of EI2" Name="SI2" Type="UINT"/>
+    </InputVars>
+    <OutputVars/>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Comment="Counter for EI1" InitialValue="" Name="CI1" Type="UINT"/>
+      <VarDeclaration Comment="Counter for EI2" InitialValue="" Name="CI2" Type="UINT"/>
+      <VarDeclaration Comment="TRUE if EI2 is active" InitialValue="" Name="EI2ACTIVE" Type="BOOL"/>
+    </InternalVars>
+    <ECC>
+      <ECState Comment="Initial State" Name="START" x="1140.0" y="475.0"/>
+      <ECState Comment="Normal execution" Name="EI1Output" x="3040.0" y="190.0">
+        <ECAction Algorithm="incrementCI1"/>
+      </ECState>
+      <ECState Name="EI2Output" x="1710.0" y="1615.0">
+        <ECAction Algorithm="incrementCI2"/>
+      </ECState>
+      <ECState Name="Switch" x="3135.0" y="1045.0">
+        <ECAction Algorithm="switch"/>
+      </ECState>
+      <ECState Name="Idle" x="2090.0" y="760.0">
+        <ECAction Output="EO"/>
+      </ECState>
+      <ECTransition Comment="" Condition="EI1[FALSE = EI2ACTIVE]" Destination="EI1Output" Source="START" x="1560.0" y="95.0"/>
+      <ECTransition Comment="" Condition="EI2[TRUE = EI2ACTIVE]" Destination="EI2Output" Source="START" x="655.0" y="1270.0"/>
+      <ECTransition Comment="" Condition="[CI2 &gt;= SI2]" Destination="Switch" Source="EI2Output" x="2610.0" y="1355.0"/>
+      <ECTransition Comment="" Condition="[CI1 &gt;= SI1]" Destination="Switch" Source="EI1Output" x="3205.0" y="670.0"/>
+      <ECTransition Comment="" Condition="1" Destination="Idle" Source="Switch" x="2700.0" y="1090.0"/>
+      <ECTransition Comment="" Condition="[CI1 &lt; SI1]" Destination="Idle" Source="EI1Output" x="2735.0" y="495.0"/>
+      <ECTransition Comment="" Condition="[CI2 &lt; SI2]" Destination="Idle" Source="EI2Output" x="2055.0" y="1240.0"/>
+      <ECTransition Comment="" Condition="EI1[FALSE = EI2ACTIVE]" Destination="EI1Output" Source="Idle" x="1495.0" y="440.0"/>
+      <ECTransition Comment="" Condition="EI2[TRUE = EI2ACTIVE]" Destination="EI2Output" Source="Idle" x="1250.0" y="880.0"/>
+    </ECC>
+    <Algorithm Comment="Increments CI1 counter by 1" Name="incrementCI1">
+      <ST Text="CI1 := CI1 + 1;"/>
+    </Algorithm>
+    <Algorithm Comment="Increments CI2 counter by 1" Name="incrementCI2">
+      <ST Text="CI2 := CI2 + 1;"/>
+    </Algorithm>
+    <Algorithm Comment="Resets counters to 0 and switches active event" Name="switch">
+      <ST Text="CI1 := 0;&#13;&#10;CI2 := 0;&#13;&#10;EI2ACTIVE := NOT EI2ACTIVE;"/>
+    </Algorithm>
+  </BasicFB>
+  <Service Comment="Switches between EI1 and EI2 to trigger EO (starting with EI1)" LeftInterface="left interface" RightInterface="right interface"/>
+</FBType>

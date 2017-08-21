@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Proportional controller for PV power deration" Name="PVDERATOR_PROP">
+  <Identification Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-06-15" Organization="HTW Berlin" Version="0.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="ACT"/>
+        <With Var="SET"/>
+        <With Var="KP"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Execution Confirmation" Name="CNF" Type="Event">
+        <With Var="DF"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Actual PV (feed-in) power in kW/kWp" Name="ACT" Type="LREAL"/>
+      <VarDeclaration Comment="Set PV (feed-in) power in kW/kWp" Name="SET" Type="LREAL"/>
+      <VarDeclaration Comment="Proportional control coefficient" Name="KP" Type="LREAL"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Derating factor" InitialValue="1" Name="DF" Type="LREAL"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="FB_PID" Type="FB_PID" x="1330.0" y="1045.0">
+      <Parameter Name="KP" Value="LREAL#1"/>
+      <Parameter Name="KI" Value="LREAL#0"/>
+      <Parameter Name="KD" Value="LREAL#0"/>
+    </FB>
+    <FB Name="F_ADD" Type="F_ADD" x="1805.0" y="1045.0"/>
+    <FB Name="DERATING_FACTOR" Type="LREAL2LREAL" x="5130.0" y="950.0"/>
+    <FB Name="F_LIMIT" Type="F_LIMIT" x="4560.0" y="855.0">
+      <Parameter Name="MN" Value="LREAL#0"/>
+      <Parameter Name="MX" Value="LREAL#1"/>
+    </FB>
+    <FB Name="LREAL2LREAL" Type="LREAL2LREAL" x="3705.0" y="950.0"/>
+    <FB Name="F_GT" Type="F_GT" x="570.0" y="285.0">
+      <Parameter Name="IN2" Value="LREAL#0"/>
+    </FB>
+    <FB Name="F_SEL" Type="F_SEL" x="3135.0" y="285.0">
+      <Parameter Name="IN0" Value="LREAL#1"/>
+    </FB>
+    <FB Name="E_SWITCH" Type="E_SWITCH" x="1330.0" y="1900.0"/>
+    <FB Name="LREAL2LREAL_1" Type="LREAL2LREAL" x="2375.0" y="950.0"/>
+    <FB Name="E_MERGE" Type="E_MERGE" x="3040.0" y="1710.0"/>
+    <DataConnections>
+      <Connection Destination="FB_PID.ACT" Source="ACT" dx1="135.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_PID.SET" Source="SET" dx1="115.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="DF" Source="DERATING_FACTOR.OUT" dx1="150.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_ADD.IN1" Source="FB_PID.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_GT.IN1" Source="ACT" dx1="140.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL.G" Source="F_GT.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_ADD.IN2" Source="DERATING_FACTOR.OUT" dx1="0.0" dx2="0.0" dy="275.0"/>
+      <Connection Destination="E_SWITCH.G" Source="F_GT.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL.IN1" Source="LREAL2LREAL_1.OUT" dx1="0.0" dx2="0.0" dy="-145.0"/>
+      <Connection Destination="LREAL2LREAL_1.IN" Source="F_ADD.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL.IN" Source="F_SEL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_LIMIT.IN" Source="LREAL2LREAL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="DERATING_FACTOR.IN" Source="F_LIMIT.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_PID.KP" Source="KP" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="CNF" Source="DERATING_FACTOR.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_ADD.REQ" Source="FB_PID.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_GT.REQ" Source="REQ" dx1="255.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL.REQ" Source="F_GT.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH.EI" Source="F_SEL.CNF" dx1="235.0" dx2="-290.0" dy="-305.0"/>
+      <Connection Destination="FB_PID.REQ" Source="E_SWITCH.EO1" dx1="25.0" dx2="-260.0" dy="235.0"/>
+      <Connection Destination="E_MERGE.EI2" Source="E_SWITCH.EO0" dx1="1225.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_MERGE.EI1" Source="LREAL2LREAL_1.CNF" dx1="140.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_1.REQ" Source="F_ADD.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL.REQ" Source="E_MERGE.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_LIMIT.REQ" Source="LREAL2LREAL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="DERATING_FACTOR.REQ" Source="F_LIMIT.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

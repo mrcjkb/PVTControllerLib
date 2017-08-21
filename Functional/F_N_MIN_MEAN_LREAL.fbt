@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Stores arriving data and releases the mean in intervals specified by input N." Name="F_N_MIN_MEAN_LREAL">
+  <Identification Description="Stores arriving data and releases the mean in intervals specified by input N.&#13;&#10;The elapsed time between values is determined via the time stamp. Data should be sent at each interval N. Smaller intervals are also permitted. If the interval set by N is exceeded, a correction for the mean is corrected by factoring in the time N was exceeded by and the next computation is initialized with the data that was excluded." Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-06-13" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="N"/>
+        <With Var="X"/>
+        <With Var="TSI"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="New average arrived" Name="CNF1" Type="Event">
+        <With Var="Y"/>
+        <With Var="TSO"/>
+      </Event>
+      <Event Comment="No new average arrived" Name="CNF0" Type="Event">
+        <With Var="Y"/>
+        <With Var="TSO"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input data" Name="X" Type="LREAL"/>
+      <VarDeclaration Comment="Time stamp" Name="TSI" Type="DATE_AND_TIME"/>
+      <VarDeclaration Comment="Time interval of mean" Name="N" Type="TIME"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="N minute mean of X" Name="Y" Type="LREAL"/>
+      <VarDeclaration Comment="Time stamp" Name="TSO" Type="DATE_AND_TIME"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="F_SUB_DT_DT" Type="F_SUB_DT_DT" x="4655.0" y="760.0"/>
+    <FB Name="LAST_TS" Type="FB_SHIFT1_DT" x="1330.0" y="760.0"/>
+    <FB Name="RESET_CHK" Type="F_LT" x="7220.0" y="855.0"/>
+    <FB Name="EO0_RESET" Type="E_SWITCH" x="7790.0" y="855.0"/>
+    <FB Name="E_SPLIT" Type="E_SPLIT" x="760.0" y="665.0"/>
+    <FB Name="E_SPLIT_1" Type="E_SPLIT" x="5320.0" y="570.0"/>
+    <FB Name="E_REND" Type="E_REND" x="7125.0" y="1995.0"/>
+    <FB Name="TIME_FACTOR" Type="F_DIV" x="7695.0" y="2185.0"/>
+    <FB Name="F_MUL" Type="F_MUL" x="2565.0" y="1900.0"/>
+    <FB Name="LREAL2LREAL_1" Type="LREAL2LREAL" x="3135.0" y="1900.0"/>
+    <FB Name="F_TIME_TO_ULINT_1" Type="F_TIME_TO_LREAL" x="5415.0" y="2850.0"/>
+    <FB Name="F_TIME_TO_ULINT" Type="F_TIME_TO_LREAL" x="5415.0" y="1805.0"/>
+    <FB Name="LREAL2LREAL_2" Type="LREAL2LREAL" x="1425.0" y="1900.0"/>
+    <FB Name="LREAL2LREAL_3" Type="LREAL2LREAL" x="9310.0" y="3515.0"/>
+    <FB Name="E_SWITCH" Type="E_SWITCH" x="4085.0" y="380.0"/>
+    <FB Name="SUB" Type="F_SUB_DT_DT" x="2185.0" y="285.0"/>
+    <FB Name="F_TIME_TO_LREAL" Type="F_TIME_TO_LREAL" x="2755.0" y="285.0"/>
+    <FB Name="F_GT" Type="F_GT" x="3515.0" y="380.0">
+      <Parameter Name="IN2" Value="LREAL#0"/>
+    </FB>
+    <FB Name="ACCUMULATE_DATA" Type="F_ACCUM_LREAL" x="3990.0" y="1900.0">
+      <Parameter Name="INIT" Value="LREAL#0"/>
+    </FB>
+    <FB Name="E_REND_1" Type="E_REND" x="6650.0" y="1520.0"/>
+    <FB Name="E_SPLIT_2" Type="E_SPLIT" x="4750.0" y="285.0"/>
+    <FB Name="OVERTIME" Type="F_SUB" x="8550.0" y="1045.0"/>
+    <FB Name="OVERTIME_FACTOR" Type="F_DIV" x="9120.0" y="2660.0"/>
+    <FB Name="TIME2LREAL" Type="F_TIME_TO_LREAL" x="8930.0" y="1805.0"/>
+    <FB Name="LREAL2LREAL" Type="LREAL2LREAL" x="6270.0" y="3325.0"/>
+    <FB Name="OVERTIME_DATA" Type="F_SUB" x="10070.0" y="3705.0"/>
+    <FB Name="ACCUMULATE_TIME" Type="F_ACCUM_TIME" x="5985.0" y="665.0">
+      <Parameter Name="INIT" Value="T#0ms"/>
+    </FB>
+    <FB Name="RESET" Type="E_SPLIT_3" x="10260.0" y="1710.0"/>
+    <FB Name="INIT_TO_OVERTIME" Type="TIME2TIME" x="9120.0" y="1045.0"/>
+    <FB Name="ONE__PLUS_OVERTIME_FACTOR" Type="F_ADD" x="7030.0" y="3325.0">
+      <Parameter Name="IN2" Value="LREAL#1"/>
+    </FB>
+    <FB Name="LREAL2LREAL_4" Type="LREAL2LREAL" x="7980.0" y="3325.0"/>
+    <FB Name="LREAL2LREAL_5" Type="LREAL2LREAL" x="10735.0" y="3135.0"/>
+    <FB Name="N_MIN_MEAN" Type="F_DIV" x="8740.0" y="3515.0"/>
+    <FB Name="F_SUB_DT_TIME" Type="F_SUB_DT_TIME" x="9785.0" y="-665.0"/>
+    <FB Name="INITIALIZE" Type="E_SPLIT" x="4085.0" y="-190.0"/>
+    <FB Name="E_MERGE" Type="E_MERGE" x="10925.0" y="380.0"/>
+    <FB Name="E_INIT_CHK" Type="E_INIT_CHK" x="1520.0" y="-95.0"/>
+    <FB Name="LIMIT_OVERTIME" Type="F_MIN" x="7125.0" y="-950.0"/>
+    <FB Name="RESET_DATA_IF_TOO_MUCH_OVERTIME" Type="F_GT" x="7980.0" y="-855.0"/>
+    <FB Name="RESET_DATA_IF_TOO_MUCH_OVERTIME2" Type="F_SEL" x="2375.0" y="3325.0">
+      <Parameter Name="IN1" Value="LREAL#0"/>
+    </FB>
+    <FB Name="LREAL2LREAL_6" Type="LREAL2LREAL" x="10830.0" y="3705.0"/>
+    <DataConnections>
+      <Connection Destination="LAST_TS.I" Source="TSI" dx1="460.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SUB_DT_DT.IN1" Source="LAST_TS.O1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SUB_DT_DT.IN2" Source="LAST_TS.O2" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="RESET_CHK.IN2" Source="N" dx1="95.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="EO0_RESET.G" Source="RESET_CHK.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_TIME_TO_ULINT_1.IN" Source="N" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TIME_FACTOR.IN2" Source="F_TIME_TO_ULINT_1.OUT" dx1="1490.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_TIME_TO_ULINT.IN" Source="F_SUB_DT_DT.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TIME_FACTOR.IN1" Source="F_TIME_TO_ULINT.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_1.IN" Source="F_MUL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_2.IN" Source="TIME_FACTOR.OUT" dx1="0.0" dx2="-185.0" dy="335.0"/>
+      <Connection Destination="SUB.IN1" Source="LAST_TS.O1" dx1="190.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SUB.IN2" Source="LAST_TS.O2" dx1="225.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_TIME_TO_LREAL.IN" Source="SUB.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_GT.IN1" Source="F_TIME_TO_LREAL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH.G" Source="F_GT.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ACCUMULATE_DATA.IN" Source="LREAL2LREAL_1.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="OVERTIME.IN2" Source="N" dx1="100.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TIME2LREAL.IN" Source="OVERTIME.OUT" dx1="0.0" dx2="-185.0" dy="-180.0"/>
+      <Connection Destination="OVERTIME_FACTOR.IN1" Source="TIME2LREAL.OUT" dx1="0.0" dx2="-120.0" dy="-250.0"/>
+      <Connection Destination="OVERTIME_FACTOR.IN2" Source="F_TIME_TO_ULINT_1.OUT" dx1="2850.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MUL.IN2" Source="X" dx1="250.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MUL.IN1" Source="LREAL2LREAL_2.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL.IN" Source="OVERTIME_FACTOR.OUT" dx1="0.0" dx2="-170.0" dy="-120.0"/>
+      <Connection Destination="ACCUMULATE_TIME.IN" Source="F_SUB_DT_DT.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="RESET_CHK.IN1" Source="ACCUMULATE_TIME.OUT" dx1="575.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="OVERTIME.IN1" Source="ACCUMULATE_TIME.OUT" dx1="450.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INIT_TO_OVERTIME.IN" Source="OVERTIME.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="OVERTIME_DATA.IN1" Source="ACCUMULATE_DATA.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="OVERTIME_DATA.IN2" Source="LREAL2LREAL_3.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ONE__PLUS_OVERTIME_FACTOR.IN1" Source="LREAL2LREAL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_4.IN" Source="ONE__PLUS_OVERTIME_FACTOR.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Y" Source="LREAL2LREAL_5.OUT" dx1="215.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_3.IN" Source="N_MIN_MEAN.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="N_MIN_MEAN.IN1" Source="ACCUMULATE_DATA.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="N_MIN_MEAN.IN2" Source="LREAL2LREAL_4.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_5.IN" Source="LREAL2LREAL_3.OUT" dx1="195.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SUB_DT_TIME.IN1" Source="TSI" dx1="455.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SUB_DT_TIME.IN2" Source="INIT_TO_OVERTIME.OUT" dx1="165.0" dx2="-135.0" dy="-115.0"/>
+      <Connection Destination="TSO" Source="F_SUB_DT_TIME.OUT" dx1="1290.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LIMIT_OVERTIME.IN2" Source="N" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LIMIT_OVERTIME.IN1" Source="INIT_TO_OVERTIME.OUT" dx1="0.0" dx2="-145.0" dy="-1390.0"/>
+      <Connection Destination="ACCUMULATE_TIME.INIT" Source="LIMIT_OVERTIME.OUT" dx1="25.0" dx2="-160.0" dy="0.0"/>
+      <Connection Destination="RESET_DATA_IF_TOO_MUCH_OVERTIME.IN1" Source="INIT_TO_OVERTIME.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="RESET_DATA_IF_TOO_MUCH_OVERTIME.IN2" Source="N" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="RESET_DATA_IF_TOO_MUCH_OVERTIME2.G" Source="RESET_DATA_IF_TOO_MUCH_OVERTIME.OUT" dx1="0.0" dx2="-320.0" dy="-1360.0"/>
+      <Connection Destination="LREAL2LREAL_6.IN" Source="OVERTIME_DATA.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="RESET_DATA_IF_TOO_MUCH_OVERTIME2.IN0" Source="LREAL2LREAL_6.OUT" dx1="0.0" dx2="-285.0" dy="390.0"/>
+      <Connection Destination="ACCUMULATE_DATA.INIT" Source="RESET_DATA_IF_TOO_MUCH_OVERTIME2.OUT" dx1="140.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="EO0_RESET.EI" Source="RESET_CHK.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SPLIT.EI" Source="REQ" dx1="210.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LAST_TS.REQ" Source="E_SPLIT.EO1" dx1="70.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SPLIT_1.EI" Source="F_SUB_DT_DT.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TIME_FACTOR.REQ" Source="E_REND.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_TIME_TO_ULINT_1.REQ" Source="E_SPLIT.EO2" dx1="140.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_REND.EI2" Source="F_TIME_TO_ULINT_1.CNF" dx1="350.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_TIME_TO_ULINT.REQ" Source="E_SPLIT_1.EO2" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_REND.EI1" Source="F_TIME_TO_ULINT.CNF" dx1="330.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_1.REQ" Source="F_MUL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_2.REQ" Source="TIME_FACTOR.CNF" dx1="145.0" dx2="-150.0" dy="555.0"/>
+      <Connection Destination="F_MUL.REQ" Source="LREAL2LREAL_2.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_TIME_TO_LREAL.REQ" Source="SUB.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_GT.REQ" Source="F_TIME_TO_LREAL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH.EI" Source="F_GT.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SUB_DT_DT.REQ" Source="E_SWITCH.EO1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ACCUMULATE_DATA.REQ" Source="LREAL2LREAL_1.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_REND_1.EI2" Source="ACCUMULATE_DATA.CNF" dx1="225.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="RESET_CHK.REQ" Source="E_REND_1.EO" dx1="15.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_REND.R" Source="E_SPLIT_2.EO2" dx1="125.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SPLIT_2.EI" Source="E_SWITCH.EO0" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_REND_1.R" Source="E_SPLIT_2.EO1" dx1="100.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="OVERTIME.REQ" Source="EO0_RESET.EO0" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="OVERTIME_FACTOR.REQ" Source="TIME2LREAL.CNF" dx1="150.0" dx2="0.0" dy="85.0"/>
+      <Connection Destination="LREAL2LREAL.REQ" Source="OVERTIME_FACTOR.CNF" dx1="255.0" dx2="0.0" dy="185.0"/>
+      <Connection Destination="OVERTIME_DATA.REQ" Source="LREAL2LREAL_3.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ACCUMULATE_TIME.REQ" Source="E_SPLIT_1.EO1" dx1="240.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_REND_1.EI1" Source="ACCUMULATE_TIME.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INIT_TO_OVERTIME.REQ" Source="OVERTIME.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ONE__PLUS_OVERTIME_FACTOR.REQ" Source="LREAL2LREAL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_4.REQ" Source="ONE__PLUS_OVERTIME_FACTOR.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="RESET.EI" Source="LREAL2LREAL_5.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="N_MIN_MEAN.REQ" Source="LREAL2LREAL_4.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_3.REQ" Source="N_MIN_MEAN.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SUB_DT_TIME.REQ" Source="INIT_TO_OVERTIME.CNF" dx1="0.0" dx2="-165.0" dy="410.0"/>
+      <Connection Destination="TIME2LREAL.REQ" Source="F_SUB_DT_TIME.CNF" dx1="0.0" dx2="0.0" dy="870.0"/>
+      <Connection Destination="E_MERGE.EI2" Source="RESET.E1" dx1="185.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LAST_TS.REQ" Source="INITIALIZE.EO1" dx1="0.0" dx2="-160.0" dy="-615.0"/>
+      <Connection Destination="E_MERGE.EI1" Source="INITIALIZE.EO2" dx1="5055.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CNF1" Source="E_MERGE.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CNF0" Source="EO0_RESET.EO1" dx1="310.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_INIT_CHK.REQ" Source="LAST_TS.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INITIALIZE.EI" Source="E_INIT_CHK.INIT" dx1="1195.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SUB.REQ" Source="E_INIT_CHK.NOINIT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LIMIT_OVERTIME.REQ" Source="RESET.E3" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="RESET_DATA_IF_TOO_MUCH_OVERTIME.REQ" Source="LIMIT_OVERTIME.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_6.REQ" Source="OVERTIME_DATA.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_5.REQ" Source="LREAL2LREAL_6.CNF" dx1="0.0" dx2="0.0" dy="100.0"/>
+      <Connection Destination="ACCUMULATE_TIME.R" Source="RESET_DATA_IF_TOO_MUCH_OVERTIME.CNF" dx1="120.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="RESET_DATA_IF_TOO_MUCH_OVERTIME2.REQ" Source="RESET.E2" dx1="0.0" dx2="-305.0" dy="1705.0"/>
+      <Connection Destination="ACCUMULATE_DATA.R" Source="RESET_DATA_IF_TOO_MUCH_OVERTIME2.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

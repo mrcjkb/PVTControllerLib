@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Stores the input and outputs the data upon the next request" Name="FB_SHIFT1_LREAL">
+  <Identification Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-06-13" Organization="HTW Berlin" Version="1.1"/>
+  <VersionInfo Author="AZ" Date="2016-05-26" Organization="fortiss GmbH" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="I"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Execution Confirmation" Name="CNF" Type="Event">
+        <With Var="O1"/>
+        <With Var="O2"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input" Name="I" Type="LREAL"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Current output" Name="O1" Type="LREAL"/>
+      <VarDeclaration Comment="Last output (O1 of last request)" Name="O2" Type="LREAL"/>
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <ECC>
+      <ECState Name="START" x="1900.0" y="1140.0"/>
+      <ECState Comment="Normal execution" Name="NormalOp" x="2850.0" y="1140.0">
+        <ECAction Algorithm="normalOperation" Output="CNF"/>
+      </ECState>
+      <ECTransition Comment="" Condition="REQ" Destination="NormalOp" Source="START" x="2615.0" y="1000.0"/>
+      <ECTransition Comment="" Condition="1" Destination="START" Source="NormalOp" x="2575.0" y="1430.0"/>
+    </ECC>
+    <Algorithm Comment="" Name="normalOperation">
+      <ST Text="O2 := O1;&#13;&#10;O1 := I;&#10;"/>
+    </Algorithm>
+  </BasicFB>
+</FBType>

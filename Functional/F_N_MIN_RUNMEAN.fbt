@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Stores arriving data and returns the running mean up to the time interval specified by input N." Name="F_N_MIN_RUNMEAN">
+  <Identification Description="Stores arriving data and returns the running mean up to the time interval specified by input N. The input N represents full minutes. For example, to determine the 10 minute running average, set N to 10. The Y output is updated in one minute intervals. A CNF output event is issued for every request along with the most recently updated Y output." Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-06-13" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="N"/>
+        <With Var="X"/>
+        <With Var="TSI"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Execution Confirmation" Name="CNF" Type="Event">
+        <With Var="Y"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input data" Name="X" Type="LREAL"/>
+      <VarDeclaration Comment="Time stamp" Name="TSI" Type="DATE_AND_TIME"/>
+      <VarDeclaration Comment="Time interval of running mean in min" Name="N" Type="UINT"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="N minute running mean of X" Name="Y" Type="LREAL"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="N_MIN_MEAN" Type="F_N_MIN_MEAN_LREAL" x="570.0" y="380.0">
+      <Parameter Name="N" Value="T#60s"/>
+    </FB>
+    <FB Name="E_MERGE" Type="E_MERGE" x="3515.0" y="475.0"/>
+    <FB Name="RUNNING_SUM" Type="F_SUM_LAST_N" x="1520.0" y="665.0"/>
+    <FB Name="F_DIV" Type="F_DIV" x="2280.0" y="760.0"/>
+    <FB Name="RUNNING_AVERAGE" Type="LREAL2LREAL" x="2755.0" y="760.0"/>
+    <DataConnections>
+      <Connection Destination="N_MIN_MEAN.X" Source="X" dx1="215.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="N_MIN_MEAN.TSI" Source="TSI" dx1="150.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="RUNNING_SUM.SV" Source="N_MIN_MEAN.Y" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="RUNNING_SUM.N" Source="N" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_DIV.IN1" Source="RUNNING_SUM.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_DIV.IN2" Source="N" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="RUNNING_AVERAGE.IN" Source="F_DIV.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Y" Source="RUNNING_AVERAGE.OUT" dx1="885.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="E_MERGE.EI1" Source="N_MIN_MEAN.CNF0" dx1="980.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="N_MIN_MEAN.REQ" Source="REQ" dx1="285.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CNF" Source="E_MERGE.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="RUNNING_SUM.REQ" Source="N_MIN_MEAN.CNF1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_DIV.REQ" Source="RUNNING_SUM.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="RUNNING_AVERAGE.REQ" Source="F_DIV.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_MERGE.EI2" Source="RUNNING_AVERAGE.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

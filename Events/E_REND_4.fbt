@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Like E_REND but with 4 inputs" Name="E_REND_4">
+  <Identification Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-06-07" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="First input event" Name="E1" Type="Event"/>
+      <Event Comment="Second input event" Name="E2" Type="Event"/>
+      <Event Comment="Third input event" Name="E3" Type="Event"/>
+      <Event Comment="Fourth input event" Name="E4" Type="Event"/>
+      <Event Comment="Fith input event" Name="R" Type="Event"/>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Output event" Name="EO" Type="Event"/>
+    </EventOutputs>
+    <InputVars/>
+    <OutputVars/>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="E_REND" Type="E_REND" x="1900.0" y="950.0"/>
+    <FB Name="E_REND_1" Type="E_REND" x="2470.0" y="1805.0"/>
+    <FB Name="E_REND_2" Type="E_REND" x="3040.0" y="2660.0"/>
+    <FB Name="E_SPLIT" Type="E_SPLIT" x="380.0" y="665.0"/>
+    <FB Name="E_SPLIT_1" Type="E_SPLIT" x="950.0" y="1805.0"/>
+    <EventConnections>
+      <Connection Destination="E_REND.EI1" Source="E1" dx1="1845.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_REND.EI2" Source="E2" dx1="1670.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_REND_1.EI1" Source="E_REND.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_REND_1.EI2" Source="E3" dx1="1630.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_REND_2.EI2" Source="E4" dx1="1590.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_REND_2.EI1" Source="E_REND_1.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SPLIT.EI" Source="R" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_REND.R" Source="E_SPLIT.EO1" dx1="340.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SPLIT_1.EI" Source="E_SPLIT.EO2" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_REND_1.R" Source="E_SPLIT_1.EO1" dx1="195.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_REND_2.R" Source="E_SPLIT_1.EO2" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="EO" Source="E_REND_2.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

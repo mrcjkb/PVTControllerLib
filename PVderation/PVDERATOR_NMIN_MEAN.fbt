@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="PV power deration according to N minute running average of grid feed-in power." Name="PVDERATOR_NMIN_MEAN">
+  <Identification Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-06-15" Organization="HTW Berlin" Version="0.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="PPV"/>
+        <With Var="PLD"/>
+        <With Var="PBAT"/>
+        <With Var="FLSET"/>
+        <With Var="N"/>
+        <With Var="TS"/>
+        <With Var="PSTC"/>
+        <With Var="KP"/>
+        <With Var="KI"/>
+        <With Var="KD"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Execution Confirmation" Name="CNF" Type="Event">
+        <With Var="DF"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="PV power in W" Name="PPV" Type="LREAL"/>
+      <VarDeclaration Comment="Load in W" Name="PLD" Type="LREAL"/>
+      <VarDeclaration Comment="Battery power (+charge, -discharge) in W" Name="PBAT" Type="LREAL"/>
+      <VarDeclaration Comment="Time stamp" Name="TS" Type="DATE_AND_TIME"/>
+      <VarDeclaration Comment="Time interval of running mean in min" Name="N" Type="UINT"/>
+      <VarDeclaration Comment="Set limit to N min mean of grid feed-in in kW/kWp" Name="FLSET" Type="LREAL"/>
+      <VarDeclaration Comment="Nominal PV capacity in kWp" Name="PSTC" Type="LREAL"/>
+      <VarDeclaration Comment="PID proportional coefficient" Name="KP" Type="LREAL"/>
+      <VarDeclaration Comment="PID integral coefficient" InitialValue="-0.00015313" Name="KI" Type="LREAL"/>
+      <VarDeclaration Comment="PID differential coefficient" InitialValue="0" Name="KD" Type="LREAL"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Derating factor" InitialValue="1" Name="DF" Type="LREAL"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="FB_PVFEEDIN_CALC" Type="FB_PVFEEDIN_CALC" x="855.0" y="665.0"/>
+    <FB Name="F_N_MIN_RUNMEAN" Type="F_N_MIN_RUNMEAN" x="2565.0" y="855.0"/>
+    <FB Name="FB_PID_LIMI" Type="FB_PID_LIMI" x="3515.0" y="1045.0"/>
+    <FB Name="F_ADD" Type="F_ADD" x="2660.0" y="95.0"/>
+    <FB Name="LREAL2LREAL" Type="LREAL2LREAL" x="3230.0" y="95.0"/>
+    <FB Name="SET_LIMIT_kW_kWp" Type="F_LIMIT" x="4275.0" y="95.0">
+      <Parameter Name="MN" Value="LREAL#0"/>
+      <Parameter Name="MX" Value="LREAL#1"/>
+    </FB>
+    <FB Name="kW_kWp" Type="F_DIV" x="1805.0" y="665.0"/>
+    <FB Name="F_LIMIT_1" Type="F_LIMIT" x="760.0" y="1805.0">
+      <Parameter Name="MN" Value="LREAL#0"/>
+      <Parameter Name="MX" Value="LREAL#1"/>
+    </FB>
+    <FB Name="LREAL2LREAL_1" Type="LREAL2LREAL" x="1330.0" y="1805.0"/>
+    <FB Name="MAX_FEED_IN_N" Type="LREAL2LREAL" x="4370.0" y="1045.0"/>
+    <FB Name="CURR_FEED_IN_N" Type="LREAL2LREAL" x="2470.0" y="1900.0"/>
+    <FB Name="PVDERATOR_PROP" Type="PVDERATOR_PROP" x="4275.0" y="1710.0">
+      <Parameter Name="KP" Value="LREAL#1"/>
+    </FB>
+    <FB Name="Wp" Type="F_MUL" x="1140.0" y="0.0">
+      <Parameter Name="IN1" Value="LREAL#1000"/>
+    </FB>
+    <FB Name="LREAL2LREAL_2" Type="LREAL2LREAL" x="1615.0" y="0.0"/>
+    <DataConnections>
+      <Connection Destination="FB_PVFEEDIN_CALC.PPV" Source="PPV" dx1="540.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_PVFEEDIN_CALC.PLD" Source="PLD" dx1="440.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_PVFEEDIN_CALC.PBAT" Source="PBAT" dx1="350.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_N_MIN_RUNMEAN.TSI" Source="TS" dx1="275.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_N_MIN_RUNMEAN.N" Source="N" dx1="220.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_PID_LIMI.ACT" Source="F_N_MIN_RUNMEAN.Y" dx1="440.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_PID_LIMI.N" Source="N" dx1="220.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_ADD.IN2" Source="FB_PID_LIMI.OUT" dx1="130.0" dx2="-50.0" dy="-195.0"/>
+      <Connection Destination="LREAL2LREAL.IN" Source="F_ADD.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SET_LIMIT_kW_kWp.IN" Source="LREAL2LREAL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="kW_kWp.IN1" Source="FB_PVFEEDIN_CALC.PGF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_LIMIT_1.IN" Source="FLSET" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_ADD.IN1" Source="LREAL2LREAL_1.OUT" dx1="550.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_1.IN" Source="F_LIMIT_1.OUT" dx1="1360.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_PID_LIMI.SET" Source="LREAL2LREAL_1.OUT" dx1="550.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MAX_FEED_IN_N.IN" Source="SET_LIMIT_kW_kWp.OUT" dx1="0.0" dx2="-195.0" dy="-120.0"/>
+      <Connection Destination="CURR_FEED_IN_N.IN" Source="kW_kWp.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_N_MIN_RUNMEAN.X" Source="CURR_FEED_IN_N.OUT" dx1="145.0" dx2="0.0" dy="80.0"/>
+      <Connection Destination="PVDERATOR_PROP.ACT" Source="CURR_FEED_IN_N.OUT" dx1="1025.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVDERATOR_PROP.SET" Source="MAX_FEED_IN_N.OUT" dx1="-105.0" dx2="-140.0" dy="-195.0"/>
+      <Connection Destination="DF" Source="PVDERATOR_PROP.DF" dx1="215.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Wp.IN2" Source="PSTC" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_2.IN" Source="Wp.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="kW_kWp.IN2" Source="LREAL2LREAL_2.OUT" dx1="0.0" dx2="-140.0" dy="-240.0"/>
+      <Connection Destination="FB_PID_LIMI.KP" Source="KP" dx1="175.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_PID_LIMI.KI" Source="KI" dx1="125.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_PID_LIMI.KD" Source="KD" dx1="110.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="LREAL2LREAL.REQ" Source="F_ADD.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SET_LIMIT_kW_kWp.REQ" Source="LREAL2LREAL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_LIMIT_1.REQ" Source="REQ" dx1="150.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_ADD.REQ" Source="FB_PID_LIMI.CNF" dx1="0.0" dx2="-130.0" dy="145.0"/>
+      <Connection Destination="LREAL2LREAL_1.REQ" Source="F_LIMIT_1.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_PVFEEDIN_CALC.REQ" Source="LREAL2LREAL_1.CNF" dx1="0.0" dx2="0.0" dy="115.0"/>
+      <Connection Destination="MAX_FEED_IN_N.REQ" Source="SET_LIMIT_kW_kWp.CNF" dx1="135.0" dx2="0.0" dy="190.0"/>
+      <Connection Destination="CURR_FEED_IN_N.REQ" Source="kW_kWp.CNF" dx1="130.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_N_MIN_RUNMEAN.REQ" Source="CURR_FEED_IN_N.CNF" dx1="0.0" dx2="-120.0" dy="365.0"/>
+      <Connection Destination="FB_PID_LIMI.REQ" Source="F_N_MIN_RUNMEAN.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVDERATOR_PROP.REQ" Source="MAX_FEED_IN_N.CNF" dx1="145.0" dx2="0.0" dy="160.0"/>
+      <Connection Destination="CNF" Source="PVDERATOR_PROP.CNF" dx1="170.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Wp.REQ" Source="FB_PVFEEDIN_CALC.CNF" dx1="0.0" dx2="-370.0" dy="140.0"/>
+      <Connection Destination="LREAL2LREAL_2.REQ" Source="Wp.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="kW_kWp.REQ" Source="LREAL2LREAL_2.CNF" dx1="150.0" dx2="0.0" dy="85.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

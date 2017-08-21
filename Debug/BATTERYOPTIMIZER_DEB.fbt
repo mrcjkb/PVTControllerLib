@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Optimizes battery charging and/or discharging using PV power and load forecasts with a battery simulation." Name="BATTERYOPTIMIZER_DEB">
+  <Identification Description="IEC 61499 implementation of the &quot;PVprog&quot; algorithm.&#13;&#10;&#13;&#10;Original version's MIT license:&#13;&#10;&#13;&#10;Copyright (c) 2016 Joseph Bergner, Johannes Weniger, Tjarko Tjaden&#13;&#10;&#13;&#10;Permission is hereby granted, free of charge, to any person obtaining a copy&#13;&#10;of this software and associated documentation files (the &quot;Software&quot;), to deal&#13;&#10;in the Software without restriction, including without limitation the rights&#13;&#10;to use, copy, modify, merge, publish, distribute, sublicense, and/or sell&#13;&#10;copies of the Software, and to permit persons to whom the Software is&#13;&#10;furnished to do so, subject to the following conditions:&#13;&#10;&#13;&#10;The above copyright notice and this permission notice shall be included in all&#13;&#10;copies or substantial portions of the Software.&#13;&#10;&#13;&#10;THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE." Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-05-19" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Request" Name="INIT" Type="Event">
+        <With Var="QI"/>
+        <With Var="TLF"/>
+      </Event>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="FL"/>
+        <With Var="LL"/>
+        <With Var="PDIFF"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+      </Event>
+      <Event Comment="Execution Confirmation" Name="CNF" Type="Event">
+        <With Var="PBR"/>
+        <With Var="PDFSEL"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="Time frame forecasted ahead (looked forward) in h" InitialValue="15" Name="TLF" Type="LREAL"/>
+      <VarDeclaration ArraySize="96" Comment="Power difference forecast in W (negative = PV deficit, positive = PV surplus)" Name="PDIFF" Type="LREAL"/>
+      <VarDeclaration Comment="Feed-in limitation in W (0 for none)" Name="FL" Type="LREAL"/>
+      <VarDeclaration Comment="Load limit in W (0 for none)" Name="LL" Type="LREAL"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration ArraySize="96" Comment="Battery charge/discharge roadmap (Power in W, positive = charge, negative = discharge, 15 min resolved)" Name="PBR" Type="LREAL"/>
+      <VarDeclaration ArraySize="96" Comment="Power difference forecast" Name="PDFSEL" Type="LREAL"/>
+    </OutputVars>
+    <Plugs>
+      <AdapterDeclaration Comment="Link to battery model" Name="BatteryModelPlg" Type="ABatteryModel"/>
+    </Plugs>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Comment="True, when feed-in limit optimization is active, false otherwise" InitialValue="FALSE" Name="FLFLAG" Type="BOOL"/>
+      <VarDeclaration Comment="True, when load limit optimization is active, false otherwise" InitialValue="FALSE" Name="LLFLAG" Type="BOOL"/>
+      <VarDeclaration Comment="Optimized PV feed-in limitation" InitialValue="0" Name="OPTIMIZEDFEEDINLIMIT" Type="LREAL"/>
+      <VarDeclaration Comment="Optimized load limitation" InitialValue="0" Name="OPTIMIZEDLOADLIMIT" Type="LREAL"/>
+      <VarDeclaration Comment="Increment factor for feed-in and load limitation iterators" InitialValue="-1" Name="INCFACTOR" Type="LREAL"/>
+      <VarDeclaration Comment="Battery capacity after previous charge iteration step" InitialValue="-1" Name="PCAFTERCHARGE" Type="LREAL"/>
+      <VarDeclaration Comment="Battery capacity after previous discharge iteration step" InitialValue="-1" Name="PCAFTERDISCHARGE" Type="LREAL"/>
+      <VarDeclaration Comment="PV feed-in limit iterator for battery simulation" InitialValue="0" Name="FEEDINLIMITITERATOR" Type="LREAL"/>
+      <VarDeclaration Comment="Load limit iterator for battery simulation" InitialValue="0" Name="LOADLIMITITERATOR" Type="LREAL"/>
+      <VarDeclaration Comment="Number of time steps (15 min intervals) to look ahead for forecast" InitialValue="60" Name="LOOKFORWARDTIMEINTIMESTEPS" Type="UINT"/>
+    </InternalVars>
+    <ECC>
+      <ECState Comment="Initial State" Name="START" x="95.0" y="1140.0"/>
+      <ECState Comment="Initialization" Name="Init" x="760.0" y="680.0">
+        <ECAction Algorithm="initialize" Output="INITO"/>
+      </ECState>
+      <ECState Name="Initialized" x="1425.0" y="1155.0"/>
+      <ECState Name="DeInit" x="665.0" y="1535.0">
+        <ECAction Algorithm="deInitialize" Output="INITO"/>
+      </ECState>
+      <ECState Name="IncrementFeedInLimit" x="3515.0" y="395.0">
+        <ECAction Algorithm="prepareChargeSim" Output="BatteryModelPlg.SIM"/>
+      </ECState>
+      <ECState Name="IncrementLoadLimit" x="2755.0" y="760.0">
+        <ECAction Algorithm="prepareDischargeSim" Output="BatteryModelPlg.SIM"/>
+      </ECState>
+      <ECState Name="InitChargeOptimization" x="1805.0" y="395.0">
+        <ECAction Algorithm="initChargeOptimization"/>
+      </ECState>
+      <ECState Name="InitDischargeOptimization" x="2850.0" y="1155.0">
+        <ECAction Algorithm="initDischargeOptimization"/>
+      </ECState>
+      <ECState Name="NoOptimization" x="1710.0" y="1915.0">
+        <ECAction Algorithm="noLimitOperation" Output="CNF"/>
+      </ECState>
+      <ECState Name="AnalyseResults" x="4940.0" y="855.0">
+        <ECAction Algorithm="findOptimalLimits"/>
+      </ECState>
+      <ECState Name="Optimization" x="3610.0" y="1535.0">
+        <ECAction Algorithm="optimizedOperation" Output="CNF"/>
+      </ECState>
+      <ECTransition Comment="" Condition="INIT[TRUE = QI]" Destination="Init" Source="START" x="365.0" y="935.0"/>
+      <ECTransition Comment="" Condition="1" Destination="Initialized" Source="Init" x="1185.0" y="990.0"/>
+      <ECTransition Comment="" Condition="1" Destination="START" Source="DeInit" x="465.0" y="1460.0"/>
+      <ECTransition Comment="" Condition="INIT[FALSE = QI]" Destination="DeInit" Source="Initialized" x="1215.0" y="1355.0"/>
+      <ECTransition Comment="" Condition="REQ[(FL = 0 AND LL &lt;&gt; 0)]" Destination="InitDischargeOptimization" Source="Initialized" x="2215.0" y="1210.0"/>
+      <ECTransition Comment="" Condition="REQ[FL &lt;&gt; 0]" Destination="InitChargeOptimization" Source="Initialized" x="1790.0" y="710.0"/>
+      <ECTransition Comment="" Condition="REQ[(FL = 0 AND LL = 0)]" Destination="NoOptimization" Source="Initialized" x="2095.0" y="1635.0"/>
+      <ECTransition Comment="" Condition="1" Destination="Initialized" Source="NoOptimization" x="1605.0" y="1790.0"/>
+      <ECTransition Comment="" Condition="1" Destination="IncrementFeedInLimit" Source="InitChargeOptimization" x="2910.0" y="100.0"/>
+      <ECTransition Comment="" Condition="1" Destination="IncrementLoadLimit" Source="InitDischargeOptimization" x="2890.0" y="1045.0"/>
+      <ECTransition Comment="" Condition="[(FLFLAG = TRUE)]" Destination="IncrementFeedInLimit" Source="AnalyseResults" x="6020.0" y="105.0"/>
+      <ECTransition Comment="" Condition="[(FLFLAG = FALSE AND LLFLAG = TRUE)]" Destination="InitDischargeOptimization" Source="AnalyseResults" x="4495.0" y="1560.0"/>
+      <ECTransition Comment="" Condition="[(FLFLAG = FALSE AND LLFLAG = FALSE)]" Destination="Optimization" Source="AnalyseResults" x="5385.0" y="2140.0"/>
+      <ECTransition Comment="" Condition="1" Destination="Initialized" Source="Optimization" x="2655.0" y="1560.0"/>
+      <ECTransition Comment="" Condition="[BatteryModelPlg.SIMIN]" Destination="AnalyseResults" Source="IncrementFeedInLimit" x="4740.0" y="665.0"/>
+      <ECTransition Comment="" Condition="[BatteryModelPlg.SIMIN]" Destination="AnalyseResults" Source="IncrementLoadLimit" x="4645.0" y="1115.0"/>
+    </ECC>
+    <Algorithm Comment="Initialization algorithm" Name="initialize">
+      <ST Text="VAR&#13;&#10;&#9;tmp1 : LREAL;&#13;&#10;&#9;tmp2 : UINT;&#13;&#10;END_VAR;&#13;&#10;/*&#13;&#10; * Used internal vars &amp; inputs:&#13;&#10; * TLF, LOOKFORWARDTIMEINTIMESTEPS : UINT;&#13;&#10; */&#13;&#10;tmp1 := TLF * 4; // output resolution = 15 min&#13;&#10;tmp2 := LREAL_TO_UINT(tmp1);&#13;&#10;IF UINT_TO_LREAL(tmp2) &lt; tmp1 THEN &#13;&#10; &#9;LOOKFORWARDTIMEINTIMESTEPS := tmp2 + 1;&#13;&#10;ELSE&#13;&#10;&#9;LOOKFORWARDTIMEINTIMESTEPS := tmp2;&#13;&#10;END_IF;&#13;&#10;// Set output event qualifier&#10;QO := QI;"/>
+    </Algorithm>
+    <Algorithm Comment="Normally executed algorithm" Name="deInitialize">
+      <ST Text="VAR&#13;&#10;&#9;i : UINT;&#13;&#10;END_VAR;&#13;&#10;FOR i := 0 TO 95 BY 1 DO&#13;&#10;&#9;PBR[i] := 0;&#13;&#10;END_FOR;&#10;QO := FALSE;"/>
+    </Algorithm>
+    <Algorithm Comment="Initializes the PV feed-in limit iteration" Name="initChargeOptimization">
+      <ST Text="/*&#13;&#10; * Used internal vars &amp; inputs:&#13;&#10; * INCFACTOR, PCAFTERCHARGE, FL, OPTIMIZEDFEEDINLIMIT : LREAL;&#13;&#10; */&#13;&#10;INCFACTOR := -1;&#13;&#10;PCAFTERCHARGE := -1;&#13;&#10;OPTIMIZEDFEEDINLIMIT := 0;&#13;&#10;IF FL &lt; 0 THEN // Make sure feed-in limit is positive&#13;&#10;&#9;FL := FL * (-1);&#13;&#10;END_IF;&#13;&#10;FLFLAG := TRUE;&#13;&#10;IF LL = 0 THEN&#13;&#10;&#9;LLFLAG := FALSE;&#13;&#10;ELSE&#13;&#10;&#9;LLFLAG := TRUE;&#13;&#10;END_IF;"/>
+    </Algorithm>
+    <Algorithm Comment="Calculates the battery charge roadmap without feed-in and load limits" Name="noLimitOperation">
+      <ST Text="VAR&#13;&#10;&#9;i : UINT;&#13;&#10;END_VAR;&#13;&#10;/*&#13;&#10; * Used internal vars &amp; inputs:&#13;&#10; * PDIFF, PBR : LREAL;&#13;&#10; * LOOKFORWARDTIMEINTIMESTEPS : UINT;&#13;&#10; */&#13;&#10; FOR i := 0 TO LOOKFORWARDTIMEINTIMESTEPS BY 1 DO&#13;&#10; &#9;PBR[i] := PDIFF[i];&#13;&#10; END_FOR;"/>
+    </Algorithm>
+    <Algorithm Comment="Prepares the data for the battery charging simulation" Name="prepareChargeSim">
+      <ST Text="VAR&#13;&#10;&#9;i : UINT;&#13;&#10;    pvSurplus : LREAL;&#13;&#10;END_VAR;&#13;&#10;/*&#13;&#10; * Used internal vars &amp; inputs:&#13;&#10; * INCFACTOR, FEEDINLIMITITERATOR, FL, PM, TLF : LREAL;&#13;&#10; * LOOKFORWARDTIMEINTIMESTEPS : UINT;&#13;&#10; */&#13;&#10;// Increment feed-in limit iterator&#13;&#10;INCFACTOR := INCFACTOR + 1;&#13;&#10;FEEDINLIMITITERATOR := INCFACTOR * FL / 100;&#13;&#10;BatteryModelPlg.ECD := 0; // Initialize mean battery charging power&#13;&#10;FOR i := 0 TO LOOKFORWARDTIMEINTIMESTEPS - 1 BY 1 DO&#13;&#10;&#9;// Increment with PV surpluses above feed-in limit iterator&#13;&#10;&#9;pvSurplus := PDIFF[i] - FEEDINLIMITITERATOR;&#13;&#10;&#9;IF pvSurplus &lt; 0 THEN&#13;&#10;&#9;&#9;pvSurplus := 0;&#13;&#10;&#9;END_IF;&#13;&#10;&#9;BatteryModelPlg.ECD := BatteryModelPlg.ECD + pvSurplus;&#13;&#10;END_FOR;&#13;&#10;// Calculate charging energy over forecast horizon in kWh&#13;&#10;BatteryModelPlg.ECD := (BatteryModelPlg.ECD / UINT_TO_LREAL(LOOKFORWARDTIMEINTIMESTEPS)) / 1000 * TLF ;"/>
+    </Algorithm>
+    <Algorithm Comment="Analyses the battery charge/discharge simulation results" Name="findOptimalLimits">
+      <ST Text="/*&#13;&#10; * Used internal vars &amp; inputs:&#13;&#10; * FEEDINLIMITITERATOR, LOADLIMITITERATOR, FL, LL, CSIM : LREAL;&#13;&#10; * PCAFTERCHARGE, OPTIMIZEDFEEDINLIMIT, PCAFTERDISCHARGE, OPTIMIZEDLOADLIMIT : LREAL;&#13;&#10; * FLFLAG, LLFLAG : BOOL;&#13;&#10; */&#13;&#10;IF FLFLAG THEN&#13;&#10;&#9;// Make sure feed-in limit iteration does not go past set limit&#13;&#10;&#9;// and find highest possible feed-in limit with maximum possible charge&#13;&#10;&#9;// capacity to cover limitation with battery, i.e. stop incrementing feed-in&#13;&#10;&#9;// limitation if resulting battery capacity after charge is reduced.&#13;&#10;&#9;IF (BatteryModelPlg.CSIM &lt; PCAFTERCHARGE OR FEEDINLIMITITERATOR &gt; FL) THEN&#13;&#10;&#9;&#9;FLFLAG := FALSE;&#13;&#10;&#9;ELSE&#13;&#10;&#9;&#9;OPTIMIZEDFEEDINLIMIT := FEEDINLIMITITERATOR;&#13;&#10;&#9;&#9;PCAFTERCHARGE := BatteryModelPlg.CSIM;&#13;&#10;&#9;END_IF;&#13;&#10;ELSE&#13;&#10;&#9;// Make sure load limit iteration does not go past set limit&#13;&#10;&#9;// and find highest possible load limitation while emptying the battery&#13;&#10;&#9;// as much as possible to cover the peak load, i.e. stop incrementing&#13;&#10;&#9;// load limit if resulting battery capacity after discharge is increased.&#13;&#10;&#9;IF (BatteryModelPlg.CSIM &gt; PCAFTERDISCHARGE OR LOADLIMITITERATOR &gt; LL) THEN&#13;&#10;&#9;&#9;LLFLAG := FALSE;&#13;&#10;&#9;ELSE&#13;&#10;&#9;&#9;OPTIMIZEDLOADLIMIT := LOADLIMITITERATOR;&#13;&#10;&#9;&#9;PCAFTERDISCHARGE := BatteryModelPlg.CSIM;&#13;&#10;&#9;END_IF;&#13;&#10;END_IF;"/>
+    </Algorithm>
+    <Algorithm Comment="Prepares the data for the battery discharging simulation" Name="prepareDischargeSim">
+      <ST Text="VAR&#13;&#10;&#9;i : UINT;&#13;&#10;    loadDeficit : LREAL;&#13;&#10;END_VAR;&#13;&#10;/*&#13;&#10; * Used internal vars &amp; inputs:&#13;&#10; * INCFACTOR, LOADLIMITITERATOR, LL, PM : LREAL;&#13;&#10; * LOOKFORWARDTIMEINTIMESTEPS : UINT;&#13;&#10; */&#13;&#10;// Increment feed-in limit iterator&#13;&#10;INCFACTOR := INCFACTOR + 1;&#13;&#10;LOADLIMITITERATOR := INCFACTOR * LL / 100;&#13;&#10;BatteryModelPlg.ECD := 0; // Initialize mean battery discharging power&#13;&#10;FOR i := 0 TO LOOKFORWARDTIMEINTIMESTEPS - 1 BY 1 DO&#13;&#10;&#9;// Increment with PV surpluses above feed-in limit iterator&#13;&#10;&#9;loadDeficit := PDIFF[i];&#13;&#10;&#9;// workaround for MAX(0, ABS(MIN(0, PFIFF[i])) - LOADLIMITITERATOR)&#13;&#10;&#9;IF loadDeficit &gt; 0 THEN&#13;&#10;&#9;&#9;loadDeficit := 0;&#13;&#10;&#9;ELSE&#13;&#10;&#9;&#9;loadDeficit := loadDeficit * (-1) - LOADLIMITITERATOR;&#13;&#10;&#9;&#9;IF loadDeficit &lt; 0 THEN&#13;&#10;&#9;&#9;&#9;loadDeficit := 0;&#13;&#10;&#9;&#9;END_IF;&#13;&#10;&#9;END_IF;&#13;&#10;&#9;BatteryModelPlg.ECD := BatteryModelPlg.ECD + loadDeficit;&#13;&#10;END_FOR;&#13;&#10;// Calculate discharging energy over forecast horizon in kWh (negative to indicate discharging)&#13;&#10;BatteryModelPlg.ECD := BatteryModelPlg.ECD / UINT_TO_LREAL(LOOKFORWARDTIMEINTIMESTEPS) / 1000 * TLF * (-1);&#13;&#10;"/>
+    </Algorithm>
+    <Algorithm Comment="Initializes the load limit iteration" Name="initDischargeOptimization">
+      <ST Text="/*&#13;&#10; * Used internal vars &amp; inputs:&#13;&#10; * INCFACTOR, PCAFTERDISCHARGE, OPTIMIZEDLOADLIMIT, LL : LREAL;&#13;&#10; */&#13;&#10;INCFACTOR := -1;&#13;&#10;PCAFTERDISCHARGE := -1;&#13;&#10;OPTIMIZEDLOADLIMIT := 0;&#13;&#10;IF LL &lt; 0 THEN // Make sure load limit is positive&#13;&#10;&#9;LL := LL * (-1);&#13;&#10;END_IF;&#13;&#10;// Set FLFLAG false to prevent PV feed-in limitation iteration&#13;&#10;FLFLAG := FALSE;&#13;&#10;LLFLAG := TRUE;"/>
+    </Algorithm>
+    <Algorithm Comment="Calculates the battery charge roadmap with optimized feed-in and load limits" Name="optimizedOperation">
+      <ST Text="VAR&#13;&#10;&#9;i : UINT;&#13;&#10;&#9;batteryChargeForecast : LREAL;&#13;&#10;END_VAR;&#13;&#10;/*&#13;&#10; * Used internal vars &amp; inputs:&#13;&#10; * FL, LL, PDIFF, PBR, OPTIMIZEDFEEDINLIMIT, OPTIMIZEDLOADLIMIT : LREAL;&#13;&#10; * LOOKFORWARDTIMEINTIMESTEPS : UINT;&#13;&#10; */&#13;&#10;IF (FL &gt; 0 AND LL = 0) THEN // Only PV feed-in limitation&#13;&#10;&#9;FOR i := 0 TO LOOKFORWARDTIMEINTIMESTEPS - 1 BY 1 DO&#13;&#10;&#9;&#9;batteryChargeForecast := PDIFF[i] - OPTIMIZEDFEEDINLIMIT;&#13;&#10;&#9;&#9;IF batteryChargeForecast &lt; 0 THEN // Only look at PV surpluses&#13;&#10;&#9;&#9;&#9;batteryChargeForecast := 0;&#13;&#10;&#9;&#9;END_IF;&#13;&#10;&#9;&#9;IF batteryChargeForecast &lt; PDIFF[i] THEN&#13;&#10;&#9;&#9;&#9;PBR[i] := INT_TO_LREAL(LREAL_TO_INT(batteryChargeForecast)); // ROUND() workaround&#13;&#10;&#9;&#9;ELSE&#13;&#10;&#9;&#9;&#9;PBR[i] := INT_TO_LREAL(LREAL_TO_INT(PDIFF[i]));&#13;&#10;&#9;&#9;END_IF;&#13;&#10;&#9;END_FOR;&#13;&#10;ELSIF (FL = 0 AND LL &lt;&gt; 0) THEN // Only load peak shaving&#13;&#10;&#9;FOR i := 0 TO LOOKFORWARDTIMEINTIMESTEPS - 1 BY 1 DO&#13;&#10;&#9;&#9;batteryChargeForecast := PDIFF[i] + OPTIMIZEDLOADLIMIT;&#13;&#10;&#9;&#9;IF batteryChargeForecast &gt; 0 THEN // Only look at load deficits&#13;&#10;&#9;&#9;&#9;batteryChargeForecast := 0;&#13;&#10;&#9;&#9;END_IF;&#13;&#10;&#9;&#9;IF batteryChargeForecast &gt; PDIFF[i] THEN&#13;&#10;&#9;&#9;&#9;PBR[i] := INT_TO_LREAL(LREAL_TO_INT(batteryChargeForecast));&#13;&#10;&#9;&#9;ELSE&#13;&#10;&#9;&#9;&#9;PBR[i] := INT_TO_LREAL(LREAL_TO_INT(PDIFF[i]));&#13;&#10;&#9;&#9;END_IF;&#13;&#10;&#9;END_FOR;&#13;&#10;ELSIF (FL &lt;&gt; 0 AND LL &lt;&gt; 0) THEN // Both PV feed-in limitation and load peak shaving&#13;&#10;&#9;FOR i := 0 TO LOOKFORWARDTIMEINTIMESTEPS - 1 BY 1 DO&#13;&#10;&#9;&#9;IF PDIFF[i] &gt; 0 THEN // PV surplus&#13;&#10;&#9;&#9;&#9;batteryChargeForecast := PDIFF[i] - OPTIMIZEDFEEDINLIMIT;&#13;&#10;&#9;&#9;&#9;IF batteryChargeForecast &gt; 0 THEN&#13;&#10;&#9;&#9;&#9;&#9;batteryChargeForecast := 0;&#13;&#10;&#9;&#9;&#9;END_IF;&#13;&#10;&#9;&#9;&#9;IF batteryChargeForecast &gt; PDIFF[i] THEN&#13;&#10;&#9;&#9;&#9;&#9;PBR[i] :=INT_TO_LREAL(LREAL_TO_INT(batteryChargeForecast));&#13;&#10;&#9;&#9;&#9;ELSE&#13;&#10;&#9;&#9;&#9;&#9;PBR[i] := INT_TO_LREAL(LREAL_TO_INT(PDIFF[i]));&#13;&#10;&#9;&#9;&#9;END_IF;&#13;&#10;&#9;&#9;ELSE // Load deficit&#13;&#10;&#9;&#9;&#9;batteryChargeForecast := PDIFF[i] + OPTIMIZEDLOADLIMIT;&#13;&#10;&#9;&#9;&#9;IF batteryChargeForecast &gt; 0 THEN&#13;&#10;&#9;&#9;&#9;&#9;batteryChargeForecast := 0;&#13;&#10;&#9;&#9;&#9;END_IF;&#13;&#10;&#9;&#9;&#9;IF batteryChargeForecast &gt; PDIFF[i] THEN&#13;&#10;&#9;&#9;&#9;&#9;PBR[i] := INT_TO_LREAL(LREAL_TO_INT(batteryChargeForecast));&#13;&#10;&#9;&#9;&#9;ELSE&#13;&#10;&#9;&#9;&#9;&#9;PBR[i] := INT_TO_LREAL(LREAL_TO_INT(PDIFF[i]));&#13;&#10;&#9;&#9;&#9;END_IF;&#13;&#10;&#9;&#9;END_IF;&#13;&#10;&#9;END_FOR;&#13;&#10;END_IF;"/>
+    </Algorithm>
+  </BasicFB>
+</FBType>

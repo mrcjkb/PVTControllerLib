@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Simple SG Ready heat pump controller for battery systems" Name="HeatPumpController2">
+  <Identification Description="Sets the output to NORMAL (0:0) if there are no PV surpluses. If there are surpluses, the output is set to AMPLIFIED (0:1)." Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-07-29" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="PLD"/>
+        <With Var="PPV"/>
+        <With Var="PBAT"/>
+        <With Var="PHP"/>
+        <With Var="F"/>
+        <With Var="TS"/>
+        <With Var="DF"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Execution Confirmation" Name="CNF" Type="Event">
+        <With Var="SG1"/>
+        <With Var="SG2"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="PV power in W" Name="PPV" Type="LREAL"/>
+      <VarDeclaration Comment="Load in W" Name="PLD" Type="LREAL"/>
+      <VarDeclaration Comment="Battery charging power in W" Name="PBAT" Type="LREAL"/>
+      <VarDeclaration Comment="Time stamp" Name="TS" Type="DATE_AND_TIME"/>
+      <VarDeclaration Comment="Heat pump's nominal electrical power in kW" Name="PHP" Type="LREAL"/>
+      <VarDeclaration Comment="On/Off threshold [0.1,..,1]" InitialValue="1" Name="F" Type="LREAL"/>
+      <VarDeclaration Comment="Derating factor for the PV system [0,..,1]" Name="DF" Type="LREAL"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="SG Ready output 1" Name="SG1" Type="BOOL"/>
+      <VarDeclaration Comment="SG Ready output 2" Name="SG2" Type="BOOL"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="FB_PVFEEDIN_CALC" Type="FB_PVFEEDIN_CALC" x="2470.0" y="95.0"/>
+    <FB Name="F_LIMIT" Type="F_LIMIT" x="1710.0" y="2185.0">
+      <Parameter Name="MN" Value="LREAL#0.1"/>
+      <Parameter Name="MX" Value="LREAL#1.5"/>
+    </FB>
+    <FB Name="HIGH_KW" Type="F_MUL" x="3040.0" y="2375.0"/>
+    <FB Name="MEAN_PV_W" Type="F_N_MIN_MEAN_LREAL" x="665.0" y="95.0">
+      <Parameter Name="N" Value="T#1m"/>
+    </FB>
+    <FB Name="MEAN_LOAD_W" Type="F_N_MIN_MEAN_LREAL" x="665.0" y="950.0">
+      <Parameter Name="N" Value="T#1m"/>
+    </FB>
+    <FB Name="MEAN_BAT_W" Type="F_N_MIN_MEAN_LREAL" x="665.0" y="1710.0">
+      <Parameter Name="N" Value="T#1m"/>
+    </FB>
+    <FB Name="E_MERGE" Type="E_MERGE" x="1615.0" y="95.0"/>
+    <FB Name="E_MERGE_1" Type="E_MERGE" x="1615.0" y="950.0"/>
+    <FB Name="F" Type="LREAL2LREAL" x="2280.0" y="2185.0"/>
+    <FB Name="LOW_W" Type="F_MUL" x="2470.0" y="1330.0"/>
+    <FB Name="SWITCH_STATE" Type="F_OR" x="4370.0" y="665.0"/>
+    <FB Name="BOOL2BOOL_1" Type="BOOL2BOOL" x="5130.0" y="950.0"/>
+    <FB Name="E_SWITCH" Type="E_SWITCH" x="3895.0" y="1330.0"/>
+    <FB Name="E_MERGE_2" Type="E_MERGE" x="5795.0" y="1045.0"/>
+    <FB Name="E_MERGE_3" Type="E_MERGE" x="5795.0" y="1615.0"/>
+    <FB Name="HIGH_W" Type="F_MUL" x="4465.0" y="2280.0">
+      <Parameter Name="IN2" Value="LREAL#1000"/>
+    </FB>
+    <FB Name="C_HIGH_KW" Type="LREAL2LREAL" x="3515.0" y="2375.0"/>
+    <FB Name="C_HIGH_W" Type="LREAL2LREAL" x="4940.0" y="2280.0"/>
+    <FB Name="C_LOW_W" Type="LREAL2LREAL" x="3040.0" y="1425.0"/>
+    <FB Name="NORMAL" Type="F_LE" x="3800.0" y="665.0"/>
+    <FB Name="AMPLIFIED" Type="F_GE" x="3230.0" y="95.0"/>
+    <FB Name="F_LT" Type="F_LT" x="665.0" y="3040.0">
+      <Parameter Name="IN2" Value="LREAL#1"/>
+    </FB>
+    <FB Name="F_SEL" Type="F_SEL" x="1425.0" y="2945.0">
+      <Parameter Name="IN0" Value="BOOL#0"/>
+      <Parameter Name="IN1" Value="BOOL#1"/>
+    </FB>
+    <DataConnections>
+      <Connection Destination="F_LIMIT.IN" Source="F" dx1="140.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_PV_W.TSI" Source="TS" dx1="180.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_PV_W.X" Source="PPV" dx1="275.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_LOAD_W.TSI" Source="TS" dx1="180.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_LOAD_W.X" Source="PLD" dx1="250.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_BAT_W.X" Source="PBAT" dx1="215.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_BAT_W.TSI" Source="TS" dx1="180.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_PVFEEDIN_CALC.PPV" Source="MEAN_PV_W.Y" dx1="730.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_PVFEEDIN_CALC.PLD" Source="MEAN_LOAD_W.Y" dx1="785.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_PVFEEDIN_CALC.PBAT" Source="MEAN_BAT_W.Y" dx1="865.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F.IN" Source="F_LIMIT.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="HIGH_KW.IN2" Source="PHP" dx1="115.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="HIGH_KW.IN1" Source="F.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LOW_W.IN2" Source="F.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LOW_W.IN1" Source="MEAN_LOAD_W.Y" dx1="785.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SG2" Source="BOOL2BOOL_1.OUT" dx1="135.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH.G" Source="SWITCH_STATE.OUT" dx1="0.0" dx2="-120.0" dy="-130.0"/>
+      <Connection Destination="C_HIGH_KW.IN" Source="HIGH_KW.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="HIGH_W.IN1" Source="C_HIGH_KW.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="C_HIGH_W.IN" Source="HIGH_W.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="C_LOW_W.IN" Source="LOW_W.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="NORMAL.IN1" Source="MEAN_PV_W.Y" dx1="730.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="NORMAL.IN2" Source="C_LOW_W.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SWITCH_STATE.IN2" Source="NORMAL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="AMPLIFIED.IN1" Source="FB_PVFEEDIN_CALC.PGF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="AMPLIFIED.IN2" Source="C_HIGH_W.OUT" dx1="230.0" dx2="0.0" dy="-975.0"/>
+      <Connection Destination="SWITCH_STATE.IN1" Source="AMPLIFIED.OUT" dx1="1170.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BOOL2BOOL_1.IN" Source="AMPLIFIED.OUT" dx1="2465.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_LT.IN1" Source="DF" dx1="-165.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL.G" Source="F_LT.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SG1" Source="F_SEL.OUT" dx1="4550.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="MEAN_PV_W.REQ" Source="REQ" dx1="310.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_MERGE.EI1" Source="MEAN_PV_W.CNF1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_MERGE.EI2" Source="MEAN_PV_W.CNF0" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_LOAD_W.REQ" Source="E_MERGE.EO" dx1="0.0" dx2="0.0" dy="240.0"/>
+      <Connection Destination="E_MERGE_1.EI1" Source="MEAN_LOAD_W.CNF1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_MERGE_1.EI2" Source="MEAN_LOAD_W.CNF0" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_BAT_W.REQ" Source="E_MERGE_1.EO" dx1="0.0" dx2="0.0" dy="205.0"/>
+      <Connection Destination="F_LIMIT.REQ" Source="MEAN_BAT_W.CNF1" dx1="205.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F.REQ" Source="F_LIMIT.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="HIGH_KW.REQ" Source="F.CNF" dx1="185.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH.EI" Source="SWITCH_STATE.CNF" dx1="135.0" dx2="0.0" dy="210.0"/>
+      <Connection Destination="E_MERGE_2.EI1" Source="BOOL2BOOL_1.CNF" dx1="0.0" dx2="-20.0" dy="70.0"/>
+      <Connection Destination="E_MERGE_2.EI2" Source="E_SWITCH.EO0" dx1="1685.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_MERGE_3.EI1" Source="E_MERGE_2.EO" dx1="20.0" dx2="0.0" dy="85.0"/>
+      <Connection Destination="E_MERGE_3.EI2" Source="MEAN_BAT_W.CNF0" dx1="5140.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="C_HIGH_KW.REQ" Source="HIGH_KW.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="HIGH_W.REQ" Source="C_HIGH_KW.CNF" dx1="0.0" dx2="25.0" dy="0.0"/>
+      <Connection Destination="C_HIGH_W.REQ" Source="HIGH_W.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LOW_W.REQ" Source="C_HIGH_W.CNF" dx1="0.0" dx2="-150.0" dy="130.0"/>
+      <Connection Destination="C_LOW_W.REQ" Source="LOW_W.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_PVFEEDIN_CALC.REQ" Source="C_LOW_W.CNF" dx1="175.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SWITCH_STATE.REQ" Source="NORMAL.CNF" dx1="205.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="AMPLIFIED.REQ" Source="FB_PVFEEDIN_CALC.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="NORMAL.REQ" Source="AMPLIFIED.CNF" dx1="435.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_LT.REQ" Source="E_SWITCH.EO1" dx1="1275.0" dx2="0.0" dy="585.0"/>
+      <Connection Destination="F_SEL.REQ" Source="F_LT.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BOOL2BOOL_1.REQ" Source="F_SEL.CNF" dx1="3115.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CNF" Source="E_MERGE_3.EO" dx1="135.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

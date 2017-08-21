@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Based on E_SPLIT with 3 outputs" Name="E_SPLIT_3">
+  <Identification Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-06-07" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Input event" Name="EI" Type="Event"/>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Execution Confirmation" Name="E1" Type="Event"/>
+      <Event Name="E2" Type="Event"/>
+      <Event Name="E3" Type="Event"/>
+    </EventOutputs>
+    <InputVars/>
+    <OutputVars/>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="E_SPLIT" Type="E_SPLIT" x="760.0" y="380.0"/>
+    <FB Name="E_SPLIT_1" Type="E_SPLIT" x="1995.0" y="285.0"/>
+    <EventConnections>
+      <Connection Destination="E_SPLIT.EI" Source="EI" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E1" Source="E_SPLIT.EO1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SPLIT_1.EI" Source="E_SPLIT.EO2" dx1="420.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E2" Source="E_SPLIT_1.EO1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E3" Source="E_SPLIT_1.EO2" dx1="225.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

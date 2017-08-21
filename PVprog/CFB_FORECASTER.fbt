@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Facade for PVForecaster and LoadForecaster to simplify interface" Name="CFB_FORECASTER">
+  <Identification Description="Function block for photovoltaic (PV) and load forecast generation. Outputs the difference between Ppv and Pload in W (positive = PV surplus, negative = PV deficit) along with an FCNF event every 15 min.&#13;&#10;An UDCNF event is output every min.&#13;&#10;&#13;&#10;IEC 61499 implementation of the &quot;PVprog&quot; algorithm.&#13;&#10;&#13;&#10;Original version's MIT license:&#13;&#10;&#13;&#10;Copyright (c) 2016 Joseph Bergner, Johannes Weniger, Tjarko Tjaden&#13;&#10;&#13;&#10;Permission is hereby granted, free of charge, to any person obtaining a copy&#13;&#10;of this software and associated documentation files (the &quot;Software&quot;), to deal&#13;&#10;in the Software without restriction, including without limitation the rights&#13;&#10;to use, copy, modify, merge, publish, distribute, sublicense, and/or sell&#13;&#10;copies of the Software, and to permit persons to whom the Software is&#13;&#10;furnished to do so, subject to the following conditions:&#13;&#10;&#13;&#10;The above copyright notice and this permission notice shall be included in all&#13;&#10;copies or substantial portions of the Software.&#13;&#10;&#13;&#10;THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE." Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-05-17" Organization="HTW Berlin" Version="0.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Request" Name="INIT" Type="Event">
+        <With Var="QI"/>
+      </Event>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="PPV"/>
+        <With Var="PLD"/>
+        <With Var="DOY"/>
+        <With Var="TD"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+      </Event>
+      <Event Comment="Update Execution Confirmation" Name="UDCNF" Type="Event"/>
+      <Event Comment="Forecast Generation Confirmation (occurs every 15 min)" Name="FCNF" Type="Event">
+        <With Var="PDIFF"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="PV power in W" InitialValue="0" Name="PPV" Type="LREAL"/>
+      <VarDeclaration Comment="Load in W" InitialValue="0" Name="PLD" Type="LREAL"/>
+      <VarDeclaration Comment="Day of the year [1..365]" InitialValue="1" Name="DOY" Type="UINT"/>
+      <VarDeclaration Comment="Time of day [min] [0..1439]" InitialValue="0" Name="TD" Type="UINT"/>
+      <VarDeclaration Comment="Time frame to look back when generating PV power forecasts in h" InitialValue="3" Name="TLB" Type="LREAL"/>
+      <VarDeclaration Comment="Time frame to forecast ahead (look forward) in h" InitialValue="15" Name="TLF" Type="LREAL"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration ArraySize="96" Comment="Power difference forecast in W (negative = PV deficit, positive = PV surplus)" InitialValue="0" Name="PDIFF" Type="LREAL"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="PVForecaster" Type="PVForecaster" x="2755.0" y="285.0"/>
+    <FB Name="LoadForecaster" Type="LoadForecaster" x="2755.0" y="1995.0"/>
+    <FB Name="P_DIFF" Type="FB_SUB_LREAL_ARR96" x="4180.0" y="1235.0"/>
+    <FB Name="FREQ_SPLIT" Type="E_SPLIT" x="1710.0" y="1235.0"/>
+    <FB Name="UD_SPLIT2" Type="E_SPLIT" x="1710.0" y="1805.0"/>
+    <FB Name="FCNF_REND" Type="E_REND" x="3610.0" y="1235.0"/>
+    <FB Name="UDCNF_REND" Type="E_REND" x="4180.0" y="190.0"/>
+    <FB Name="FB_FORECAST_TIMER" Type="FB_FORECAST_TIMER" x="570.0" y="1425.0">
+      <Parameter Name="RS" Value="15"/>
+    </FB>
+    <FB Name="UDCNF_SPLIT" Type="E_SPLIT" x="4655.0" y="190.0"/>
+    <DataConnections>
+      <Connection Destination="LoadForecaster.QI" Source="PVForecaster.QO" dx1="75.0" dx2="-170.0" dy="-55.0"/>
+      <Connection Destination="P_DIFF.IN1" Source="PVForecaster.PF" dx1="1330.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="P_DIFF.IN2" Source="LoadForecaster.PF" dx1="1270.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVForecaster.P" Source="PPV" dx1="2390.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LoadForecaster.P" Source="PLD" dx1="2290.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVForecaster.TLB" Source="TLB" dx1="1030.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="QO" Source="LoadForecaster.QO" dx1="2050.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PDIFF" Source="P_DIFF.OUT" dx1="395.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_FORECAST_TIMER.QI" Source="QI" dx1="155.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_FORECAST_TIMER.DOYIN" Source="DOY" dx1="130.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_FORECAST_TIMER.TDIN" Source="TD" dx1="5.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVForecaster.QI" Source="FB_FORECAST_TIMER.QO" dx1="180.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVForecaster.DOY" Source="FB_FORECAST_TIMER.DOYOUT" dx1="215.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LoadForecaster.DOY" Source="FB_FORECAST_TIMER.DOYOUT" dx1="215.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LoadForecaster.TD" Source="FB_FORECAST_TIMER.TDOUT" dx1="390.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVForecaster.TD" Source="FB_FORECAST_TIMER.TDOUT" dx1="390.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVForecaster.TLF" Source="TLF" dx1="920.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LoadForecaster.TLF" Source="TLF" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="LoadForecaster.INIT" Source="PVForecaster.INITO" dx1="210.0" dx2="-265.0" dy="135.0"/>
+      <Connection Destination="INITO" Source="LoadForecaster.INITO" dx1="1855.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FCNF" Source="P_DIFF.CNF" dx1="340.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVForecaster.FREQ" Source="FREQ_SPLIT.EO1" dx1="270.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LoadForecaster.FREQ" Source="FREQ_SPLIT.EO2" dx1="270.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVForecaster.UD" Source="UD_SPLIT2.EO1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LoadForecaster.UD" Source="UD_SPLIT2.EO2" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FCNF_REND.EI1" Source="PVForecaster.FCNF" dx1="275.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FCNF_REND.EI2" Source="LoadForecaster.FCNF" dx1="215.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="P_DIFF.REQ" Source="FCNF_REND.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="UDCNF_REND.EI1" Source="PVForecaster.UDCNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="UDCNF_REND.EI2" Source="LoadForecaster.UDCNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_FORECAST_TIMER.INIT" Source="INIT" dx1="295.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVForecaster.INIT" Source="FB_FORECAST_TIMER.INITO" dx1="285.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FREQ_SPLIT.EI" Source="FB_FORECAST_TIMER.FREQ" dx1="345.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="UD_SPLIT2.EI" Source="FB_FORECAST_TIMER.UD" dx1="300.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_FORECAST_TIMER.REQ" Source="REQ" dx1="210.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_FORECAST_TIMER.UDCNF" Source="UDCNF_SPLIT.EO2" dx1="160.0" dx2="0.0" dy="1865.0"/>
+      <Connection Destination="UDCNF" Source="UDCNF_SPLIT.EO1" dx1="160.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="UDCNF_SPLIT.EI" Source="UDCNF_REND.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

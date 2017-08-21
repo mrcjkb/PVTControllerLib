@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Composite Function Block that implements the PVprog algorithm" Name="FB_PVPROG_00">
+  <Identification Description="IEC 61499 implementation of the &quot;PVprog&quot; algorithm.&#13;&#10;&#13;&#10;Original version's MIT license:&#13;&#10;&#13;&#10;Copyright (c) 2016 Joseph Bergner, Johannes Weniger, Tjarko Tjaden&#13;&#10;&#13;&#10;Permission is hereby granted, free of charge, to any person obtaining a copy&#13;&#10;of this software and associated documentation files (the &quot;Software&quot;), to deal&#13;&#10;in the Software without restriction, including without limitation the rights&#13;&#10;to use, copy, modify, merge, publish, distribute, sublicense, and/or sell&#13;&#10;copies of the Software, and to permit persons to whom the Software is&#13;&#10;furnished to do so, subject to the following conditions:&#13;&#10;&#13;&#10;The above copyright notice and this permission notice shall be included in all&#13;&#10;copies or substantial portions of the Software.&#13;&#10;&#13;&#10;THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE." Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-05-22" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Request" Name="INIT" Type="Event">
+        <With Var="QI"/>
+      </Event>
+      <Event Comment="Power Update Event" Name="PUD" Type="Event">
+        <With Var="PPV"/>
+        <With Var="PLD"/>
+        <With Var="FL"/>
+        <With Var="LL"/>
+        <With Var="DOY"/>
+        <With Var="TD"/>
+      </Event>
+      <Event Comment="Battery Update Event" Name="BUD" Type="Event">
+        <With Var="SOC"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+      </Event>
+      <Event Comment="Power Update Confirmation" Name="PCNF" Type="Event">
+        <With Var="PB"/>
+      </Event>
+      <Event Comment="Battery Update Confirmation" Name="BCNF" Type="Event"/>
+      <Event Comment="Request Rejection Notification" Name="REJ" Type="Event">
+        <With Var="RO"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="PV power in W" Name="PPV" Type="LREAL"/>
+      <VarDeclaration Comment="Load in W" Name="PLD" Type="LREAL"/>
+      <VarDeclaration Comment="Feed-in limitation in W (0 for none)" Name="FL" Type="LREAL"/>
+      <VarDeclaration Comment="Load limit in W (0 for none)" Name="LL" Type="LREAL"/>
+      <VarDeclaration Comment="Day of the year [1..365]" InitialValue="1" Name="DOY" Type="UINT"/>
+      <VarDeclaration Comment="Time of day [min] [0..1439]" Name="TD" Type="UINT"/>
+      <VarDeclaration Comment="State of charge of the battery [0..1]" InitialValue="0.2" Name="SOC" Type="LREAL"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration Comment="Set battery charging power in W (positive = charge, negative = discharge)" Name="PB" Type="LREAL"/>
+      <VarDeclaration Comment="Rejection reason indicator. TRUE: Not enough time passed; FALSE: Currently locked" Name="RO" Type="BOOL"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="CFB_FORECASTER" Type="CFB_FORECASTER" x="2090.0" y="285.0">
+      <Parameter Name="TLB" Value="3"/>
+      <Parameter Name="TLF" Value="15"/>
+    </FB>
+    <FB Name="PVPROG_LOCK" Type="PVPROG_LOCK" x="665.0" y="1425.0">
+      <Parameter Name="DT" Value="1"/>
+    </FB>
+    <FB Name="ProgErrCtrl" Type="ProgErrCtrl" x="4370.0" y="1425.0">
+      <Parameter Name="TLF" Value="15"/>
+    </FB>
+    <FB Name="BatteryOptimizer" Type="BatteryOptimizer" x="3135.0" y="665.0">
+      <Parameter Name="TLF" Value="15"/>
+    </FB>
+    <FB Name="SimpleBatteryModel" Type="SimpleBatteryModel" x="3135.0" y="2565.0">
+      <Parameter Name="CN" Value="8.33"/>
+      <Parameter Name="EB_IN" Value="0.95"/>
+      <Parameter Name="EB_OUT" Value="1"/>
+      <Parameter Name="EBI_IN" Value="0.94"/>
+      <Parameter Name="EBI_OUT" Value="0.94"/>
+      <Parameter Name="SOCMAX" Value="0.8"/>
+      <Parameter Name="SOCMIN" Value="0.2"/>
+    </FB>
+    <FB Name="E_SPLIT" Type="E_SPLIT" x="760.0" y="665.0"/>
+    <DataConnections>
+      <Connection Destination="PVPROG_LOCK.QI" Source="QI" dx1="310.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVPROG_LOCK.PPVI" Source="PPV" dx1="290.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVPROG_LOCK.PLDI" Source="PLD" dx1="270.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVPROG_LOCK.FLI" Source="FL" dx1="250.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVPROG_LOCK.LLI" Source="LL" dx1="230.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVPROG_LOCK.DOYI" Source="DOY" dx1="210.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVPROG_LOCK.TDI" Source="TD" dx1="160.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CFB_FORECASTER.QI" Source="PVPROG_LOCK.QO" dx1="560.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CFB_FORECASTER.DOY" Source="PVPROG_LOCK.DOYO" dx1="355.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CFB_FORECASTER.TD" Source="PVPROG_LOCK.TDO" dx1="440.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="RO" Source="PVPROG_LOCK.RO" dx1="3835.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CFB_FORECASTER.PPV" Source="PVPROG_LOCK.PPVO" dx1="725.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CFB_FORECASTER.PLD" Source="PVPROG_LOCK.PLDO" dx1="640.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ProgErrCtrl.PDIFF" Source="CFB_FORECASTER.PDIFF" dx1="195.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ProgErrCtrl.FL" Source="PVPROG_LOCK.FLO" dx1="590.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ProgErrCtrl.LL" Source="PVPROG_LOCK.LLO" dx1="510.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="QO" Source="ProgErrCtrl.QO" dx1="170.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PB" Source="ProgErrCtrl.PB" dx1="200.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BatteryOptimizer.QI" Source="CFB_FORECASTER.QO" dx1="300.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BatteryOptimizer.PDIFF" Source="CFB_FORECASTER.PDIFF" dx1="195.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BatteryOptimizer.FL" Source="PVPROG_LOCK.FLO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BatteryOptimizer.LL" Source="PVPROG_LOCK.LLO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ProgErrCtrl.QI" Source="BatteryOptimizer.QO" dx1="125.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ProgErrCtrl.PBR" Source="BatteryOptimizer.PBR" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SimpleBatteryModel.SOC" Source="SOC" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SimpleBatteryModel.BatteryOptimizerSck" Source="BatteryOptimizer.BatteryModelPlg" dx1="165.0" dx2="-230.0" dy="-110.0"/>
+      <Connection Destination="ProgErrCtrl.PPV" Source="PPV" dx1="1830.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ProgErrCtrl.PLD" Source="PLD" dx1="1780.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="PVPROG_LOCK.INIT" Source="INIT" dx1="395.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CFB_FORECASTER.INIT" Source="PVPROG_LOCK.INITO" dx1="785.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="REJ" Source="PVPROG_LOCK.REJ" dx1="535.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CFB_FORECASTER.REQ" Source="PVPROG_LOCK.LO" dx1="220.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INITO" Source="ProgErrCtrl.INITO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BatteryOptimizer.INIT" Source="CFB_FORECASTER.INITO" dx1="350.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BatteryOptimizer.REQ" Source="CFB_FORECASTER.FCNF" dx1="335.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ProgErrCtrl.INIT" Source="BatteryOptimizer.INITO" dx1="225.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SimpleBatteryModel.UD" Source="BUD" dx1="125.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BCNF" Source="SimpleBatteryModel.UDCNF" dx1="420.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SPLIT.EI" Source="PUD" dx1="350.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVPROG_LOCK.L" Source="E_SPLIT.EO2" dx1="0.0" dx2="-145.0" dy="0.0"/>
+      <Connection Destination="ProgErrCtrl.REQ" Source="E_SPLIT.EO1" dx1="375.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PVPROG_LOCK.U" Source="CFB_FORECASTER.UDCNF" dx1="50.0" dx2="-160.0" dy="1565.0"/>
+      <Connection Destination="PCNF" Source="ProgErrCtrl.CNF" dx1="140.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

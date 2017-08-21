@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Forwards inputs and delegates request to UD every minute and to FREQ every RS minutes" Name="FB_FORECAST_TIMER">
+  <Identification Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-05-17" Organization="HTW Berlin" Version="0.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Request" Name="INIT" Type="Event">
+        <With Var="QI"/>
+      </Event>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="TDIN"/>
+        <With Var="DOYIN"/>
+      </Event>
+      <Event Comment="Confirmation of completed update/s" Name="UDCNF" Type="Event"/>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+      </Event>
+      <Event Comment="Memory update request for PowerForecaster FBs" Name="UD" Type="Event">
+        <With Var="DOYOUT"/>
+        <With Var="TDOUT"/>
+      </Event>
+      <Event Comment="Forecast request for PowerForecaster FBs" Name="FREQ" Type="Event">
+        <With Var="TDOUT"/>
+        <With Var="DOYOUT"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="Day of the year [1..365]" InitialValue="1" Name="DOYIN" Type="UINT"/>
+      <VarDeclaration Comment="Time of day [min] [0..1439]" Name="TDIN" Type="UINT"/>
+      <VarDeclaration Comment="Frequency [min] to send out FREQ event" InitialValue="15" Name="RS" Type="UINT"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration Comment="Day of the year [1..365]" InitialValue="1" Name="DOYOUT" Type="UINT"/>
+      <VarDeclaration Comment="Time of day [min] [0..1439]" InitialValue="0" Name="TDOUT" Type="UINT"/>
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Comment="Counts from 1 to 15" InitialValue="0" Name="COUNTER" Type="UINT"/>
+      <VarDeclaration Comment="Cache for TDIN" InitialValue="-1" Name="LASTTDIN" Type="INT"/>
+    </InternalVars>
+    <ECC>
+      <ECState Comment="Initial State" Name="START" x="475.0" y="1125.0"/>
+      <ECState Comment="Initialization" Name="Init" x="1235.0" y="665.0">
+        <ECAction Algorithm="initialize" Output="INITO"/>
+      </ECState>
+      <ECState Comment="Normal execution" Name="NormalOp" x="2850.0" y="950.0">
+        <ECAction Algorithm="normalOperation" Output="UD"/>
+      </ECState>
+      <ECState Name="Initialized" x="1900.0" y="1140.0"/>
+      <ECState Name="DeInit" x="1140.0" y="1520.0">
+        <ECAction Algorithm="deInitialize" Output="INITO"/>
+      </ECState>
+      <ECState Name="ResetCounter" x="3325.0" y="1710.0">
+        <ECAction Algorithm="resetCounter" Output="FREQ"/>
+      </ECState>
+      <ECState Name="Cache" x="2280.0" y="1615.0">
+        <ECAction Algorithm="cacheData"/>
+      </ECState>
+      <ECState Name="WaitForCnf" x="3610.0" y="1330.0"/>
+      <ECTransition Comment="" Condition="INIT[TRUE = QI]" Destination="Init" Source="START" x="840.0" y="920.0"/>
+      <ECTransition Comment="" Condition="1" Destination="Initialized" Source="Init" x="1660.0" y="975.0"/>
+      <ECTransition Comment="" Condition="REQ" Destination="NormalOp" Source="Initialized" x="2360.0" y="720.0"/>
+      <ECTransition Comment="" Condition="1" Destination="START" Source="DeInit" x="940.0" y="1445.0"/>
+      <ECTransition Comment="" Condition="INIT[FALSE = QI]" Destination="DeInit" Source="Initialized" x="1690.0" y="1340.0"/>
+      <ECTransition Comment="" Condition="[COUNTER &lt; RS]" Destination="Cache" Source="NormalOp" x="2560.0" y="1170.0"/>
+      <ECTransition Comment="" Condition="1" Destination="Cache" Source="ResetCounter" x="2840.0" y="2005.0"/>
+      <ECTransition Comment="" Condition="1" Destination="Initialized" Source="Cache" x="2075.0" y="1440.0"/>
+      <ECTransition Comment="" Condition="[COUNTER &gt;= RS]" Destination="WaitForCnf" Source="NormalOp" x="3505.0" y="1190.0"/>
+      <ECTransition Comment="" Condition="UDCNF" Destination="ResetCounter" Source="WaitForCnf" x="3650.0" y="1580.0"/>
+    </ECC>
+    <Algorithm Comment="Initialization algorithm" Name="initialize">
+      <ST Text="COUNTER := 0;&#10;QO := QI;"/>
+    </Algorithm>
+    <Algorithm Comment="Normally executed algorithm" Name="deInitialize">
+      <ST Text="COUNTER := 0;&#10;QO := FALSE;"/>
+    </Algorithm>
+    <Algorithm Comment="passes inputs to outputs and increments COUNTER by 1" Name="normalOperation">
+      <ST Text="VAR&#13;&#10;&#9;timeSinceLastExecution : INT;&#13;&#10;END_VAR;&#13;&#10;/*&#13;&#10; * Used internal vars and inputs:&#13;&#10; * COUNTER, DOYIN, DOYOUT, TDIN, TDOUT : UINT;&#13;&#10; * LASTTDIN : INT;&#13;&#10; */&#13;&#10;// Increment counter&#13;&#10;timeSinceLastExecution := UINT_TO_INT(TDIN) - LASTTDIN;&#13;&#10;IF timeSinceLastExecution &lt; 0 THEN // If last minute of yesterday was skipped&#13;&#10;&#9;timeSinceLastExecution := timeSinceLastExecution + 1440; // add 1440 minutes to correct time&#13;&#10;END_IF;&#13;&#10;COUNTER := COUNTER + INT_TO_UINT(timeSinceLastExecution);&#13;&#10;// Set outputs&#13;&#10;TDOUT := TDIN;&#13;&#10;DOYOUT := DOYIN;"/>
+    </Algorithm>
+    <Algorithm Comment="resets COUNTER" Name="resetCounter">
+      <ST Text="WHILE COUNTER &gt;= RS DO // While loop in case for some reason minutes were skipped&#13;&#10;&#9;COUNTER := COUNTER - RS;&#13;&#10;END_WHILE;"/>
+    </Algorithm>
+    <Algorithm Comment="caches inputs for next execution" Name="cacheData">
+      <ST Text="IF TDIN &gt;= 1439 THEN&#13;&#10;&#9;LASTTDIN := -1; // Reset if end of day&#13;&#10;ELSE&#13;&#10;&#9;LASTTDIN := UINT_TO_INT(TDIN); // Otherwise cache input&#13;&#10;END_IF;"/>
+    </Algorithm>
+  </BasicFB>
+</FBType>

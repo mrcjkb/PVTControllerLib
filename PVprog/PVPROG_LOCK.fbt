@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Blocks output events and input data for FB_PVPROG " Name="PVPROG_LOCK">
+  <Identification Classification="Event Processing" Description="Blocks output events and input data for FB_PVPROG after receival of L event until arrival of UL event.&#13;&#10;In the unlocked state (after receiving U event), the L input event is passed to the LO output event and the input data is passed to the output data. Receiving an L input event puts the FB into a locked state, in which L events and their respective data are not forwarded. The FB can be moved from a locked state into an unlocked state with a U event input, which also generates a UO event output." Standard="61499"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-05-22" Organization="HTW Berlin" Version="1.0"/>
+  <CompilerInfo/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Event" Name="INIT" Type="Event">
+        <With Var="QI"/>
+      </Event>
+      <Event Comment="Lock Event" Name="L" Type="Event">
+        <With Var="PPVI"/>
+        <With Var="PLDI"/>
+        <With Var="FLI"/>
+        <With Var="LLI"/>
+        <With Var="DOYI"/>
+        <With Var="TDI"/>
+      </Event>
+      <Event Comment="Unlock Event" Name="U" Type="Event"/>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Output Event" Name="INITO" Type="Event">
+        <With Var="QO"/>
+      </Event>
+      <Event Comment="Lock Confirmation" Name="LO" Type="Event">
+        <With Var="PPVO"/>
+        <With Var="PLDO"/>
+        <With Var="FLO"/>
+        <With Var="LLO"/>
+        <With Var="DOYO"/>
+        <With Var="TDO"/>
+      </Event>
+      <Event Comment="Unlock Confirmation" Name="UO" Type="Event"/>
+      <Event Comment="Rejected Request Notification" Name="REJ" Type="Event">
+        <With Var="RO"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="PV power in W" Name="PPVI" Type="LREAL"/>
+      <VarDeclaration Comment="Load in W" Name="PLDI" Type="LREAL"/>
+      <VarDeclaration Comment="Feed-in limitation in W (0 for none)" Name="FLI" Type="LREAL"/>
+      <VarDeclaration Comment="Load limit in W (0 for none)" Name="LLI" Type="LREAL"/>
+      <VarDeclaration Comment="Day of the year [1..365]" Name="DOYI" Type="UINT"/>
+      <VarDeclaration Comment="Time of day [min] [0..1439]" Name="TDI" Type="UINT"/>
+      <VarDeclaration Comment="Frequency [min] at which to let data through" Name="DT" Type="INT"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration Comment="PV power in W" Name="PPVO" Type="LREAL"/>
+      <VarDeclaration Comment="Load in W" Name="PLDO" Type="LREAL"/>
+      <VarDeclaration Comment="Feed-in limitation in W (0 for none)" Name="FLO" Type="LREAL"/>
+      <VarDeclaration Comment="Load limit in W (0 for none)" Name="LLO" Type="LREAL"/>
+      <VarDeclaration Comment="Day of the year [1..365]" Name="DOYO" Type="UINT"/>
+      <VarDeclaration Comment="Time of day [min] [0..1439]" Name="TDO" Type="UINT"/>
+      <VarDeclaration Comment="Rejection reason indicator. TRUE: Not enough time passed; FALSE: Currently locked" Name="RO" Type="BOOL"/>
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Comment="Time [min] between last update and current one" InitialValue="-1" Name="TIMESINCELASTREQ" Type="INT"/>
+      <VarDeclaration Comment="Time at the point of the last call of the prepareForecast algorithm" InitialValue="-1" Name="LASTTIMESTEP" Type="INT"/>
+    </InternalVars>
+    <ECC>
+      <ECState Comment="Set Q and issue EO" Name="START" x="570.0" y="855.0"/>
+      <ECState Comment="Reset Q and issue EO" Name="LOCKED" x="1995.0" y="475.0">
+        <ECAction Algorithm="delegateInputs" Output="LO"/>
+      </ECState>
+      <ECState Name="UNLOCKED" x="2660.0" y="1140.0"/>
+      <ECState Name="Init" x="950.0" y="380.0">
+        <ECAction Algorithm="initialize" Output="INITO"/>
+      </ECState>
+      <ECState Name="DeInit" x="1330.0" y="1140.0">
+        <ECAction Algorithm="deInitialize" Output="INITO"/>
+      </ECState>
+      <ECState Name="CheckTiming" x="3040.0" y="855.0">
+        <ECAction Algorithm="calcTimeSinceLastReq"/>
+      </ECState>
+      <ECState Name="Unlock" x="1995.0" y="950.0">
+        <ECAction Output="UO"/>
+      </ECState>
+      <ECState Name="TimeRejection" x="3135.0" y="1330.0">
+        <ECAction Algorithm="setROTrue" Output="REJ"/>
+      </ECState>
+      <ECState Name="LockRejection" x="1520.0" y="190.0">
+        <ECAction Algorithm="setROFalse" Output="REJ"/>
+      </ECState>
+      <ECTransition Comment="" Condition="INIT[TRUE = QI]" Destination="Init" Source="START" x="775.0" y="640.0"/>
+      <ECTransition Comment="" Condition="L" Destination="LOCKED" Source="Init" x="1435.0" y="655.0"/>
+      <ECTransition Comment="" Condition="INIT[FALSE = QI]" Destination="DeInit" Source="LOCKED" x="1705.0" y="900.0"/>
+      <ECTransition Comment="" Condition="INIT[FALSE = QI]" Destination="DeInit" Source="UNLOCKED" x="1625.0" y="1430.0"/>
+      <ECTransition Comment="" Condition="1" Destination="START" Source="DeInit" x="1020.0" y="1130.0"/>
+      <ECTransition Comment="" Condition="INIT[FALSE = QI]" Destination="DeInit" Source="Init" x="1210.0" y="730.0"/>
+      <ECTransition Comment="" Condition="L" Destination="CheckTiming" Source="UNLOCKED" x="3290.0" y="1110.0"/>
+      <ECTransition Comment="" Condition="[TIMESINCELASTREQ &gt;= DT]" Destination="LOCKED" Source="CheckTiming" x="2520.0" y="775.0"/>
+      <ECTransition Comment="" Condition="U" Destination="Unlock" Source="LOCKED" x="2080.0" y="735.0"/>
+      <ECTransition Comment="" Condition="1" Destination="UNLOCKED" Source="Unlock" x="2575.0" y="1205.0"/>
+      <ECTransition Comment="" Condition="[TIMESINCELASTREQ &lt; DT]" Destination="TimeRejection" Source="CheckTiming" x="3890.0" y="1165.0"/>
+      <ECTransition Comment="" Condition="1" Destination="UNLOCKED" Source="TimeRejection" x="3000.0" y="1345.0"/>
+      <ECTransition Comment="" Condition="L" Destination="LockRejection" Source="LOCKED" x="2050.0" y="335.0"/>
+      <ECTransition Comment="" Condition="1" Destination="LOCKED" Source="LockRejection" x="1795.0" y="470.0"/>
+    </ECC>
+    <Algorithm Comment="delegates input variables to output variables" Name="delegateInputs">
+      <ST Text="PPVO := PPVI;&#13;&#10;PLDO := PLDI;&#13;&#10;FLO := FLI;&#13;&#10;LLO := LLI;&#13;&#10;DOYO := DOYI;&#13;&#10;TDO := TDI;&#13;&#10;LASTTIMESTEP := TDI;"/>
+    </Algorithm>
+    <Algorithm Comment="initialization algorithm" Name="initialize">
+      <ST Text="LASTTIMESTEP := -1;&#13;&#10;QO := TRUE;"/>
+    </Algorithm>
+    <Algorithm Comment="deinitialization algorithm" Name="deInitialize">
+      <ST Text="QO := FALSE;"/>
+    </Algorithm>
+    <Algorithm Comment="calculates the time in minutes between the current and last requests" Name="calcTimeSinceLastReq">
+      <ST Text="TIMESINCELASTREQ := UINT_TO_INT(TDI) - LASTTIMESTEP;&#13;&#10;IF TIMESINCELASTREQ &lt; 0 THEN // New day&#13;&#10;&#9;TIMESINCELASTREQ := DT;&#13;&#10;END_IF;"/>
+    </Algorithm>
+    <Algorithm Comment="sets output RO to FALSE" Name="setROFalse">
+      <ST Text="RO := FALSE;"/>
+    </Algorithm>
+    <Algorithm Comment="sets output RO to TRUE" Name="setROTrue">
+      <ST Text="RO := TRUE;"/>
+    </Algorithm>
+  </BasicFB>
+</FBType>

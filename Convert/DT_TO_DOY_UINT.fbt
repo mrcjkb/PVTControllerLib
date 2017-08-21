@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Composite Function Block Type" Name="DT_TO_DOY_UINT">
+  <Identification Standard="61499-2"/>
+  <VersionInfo Author="4DIAC-IDE" Date="2017-06-05" Organization="4DIAC-Consortium" Version="0.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="DT"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Execution Confirmation" Name="CNF" Type="Event">
+        <With Var="DOY"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input date" Name="DT" Type="DATE_AND_TIME"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="DOY" Type="UINT"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="NUM_SECONDS" Type="F_SUB_DT_DT" x="855.0" y="475.0">
+      <Parameter Name="IN2" Value="DT#1972-01-01-00:00:00.000"/>
+    </FB>
+    <FB Name="NUM_SECONDS_ULINT" Type="F_TIME_TO_ULINT" x="1425.0" y="475.0"/>
+    <FB Name="NUM_YEARS" Type="F_DIV" x="2090.0" y="1710.0">
+      <Parameter Name="IN2" Value="ULINT#31557600"/>
+    </FB>
+    <FB Name="F_MULTIME" Type="F_MULTIME" x="3705.0" y="665.0"/>
+    <FB Name="DT_IN_REF_YEAR" Type="F_SUB_DT_TIME" x="4370.0" y="570.0"/>
+    <FB Name="SECONDS_SINCE_REF_ULINT" Type="F_TIME_TO_ULINT" x="1615.0" y="2470.0"/>
+    <FB Name="SECONDS_SINCE_REF" Type="F_SUB_DT_DT" x="855.0" y="2470.0">
+      <Parameter Name="IN2" Value="DT#1972-01-01-00:00:00.000"/>
+    </FB>
+    <FB Name="ONE_YEAR" Type="F_MULTIME" x="2945.0" y="570.0">
+      <Parameter Name="IN1" Value="T#1000ms"/>
+      <Parameter Name="IN2" Value="ULINT#31557600"/>
+    </FB>
+    <FB Name="NUM_DAYS" Type="F_DIV" x="2755.0" y="2470.0">
+      <Parameter Name="IN2" Value="ULINT#86400"/>
+    </FB>
+    <FB Name="NUM_DAYS_UINT" Type="F_ULINT_TO_UINT" x="3325.0" y="2470.0"/>
+    <FB Name="DOY" Type="F_ADD" x="4275.0" y="2470.0">
+      <Parameter Name="IN2" Value="UINT#1"/>
+    </FB>
+    <FB Name="UDINT2UDINT" Type="UDINT2UDINT" x="2660.0" y="1710.0"/>
+    <DataConnections>
+      <Connection Destination="NUM_SECONDS_ULINT.IN" Source="NUM_SECONDS.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="NUM_SECONDS.IN1" Source="DT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="NUM_YEARS.IN1" Source="NUM_SECONDS_ULINT.OUT" dx1="0.0" dx2="-145.0" dy="-310.0"/>
+      <Connection Destination="DT_IN_REF_YEAR.IN2" Source="F_MULTIME.OUT" dx1="175.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="DT_IN_REF_YEAR.IN1" Source="DT" dx1="4100.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MULTIME.IN1" Source="ONE_YEAR.OUT" dx1="1785.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="NUM_DAYS.IN1" Source="SECONDS_SINCE_REF_ULINT.OUT" dx1="-775.0" dx2="-180.0" dy="0.0"/>
+      <Connection Destination="NUM_DAYS_UINT.IN" Source="NUM_DAYS.OUT" dx1="125.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="DOY.IN1" Source="NUM_DAYS_UINT.OUT" dx1="255.0" dx2="-235.0" dy="-145.0"/>
+      <Connection Destination="DOY" Source="DOY.OUT" dx1="605.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="UDINT2UDINT.IN" Source="NUM_YEARS.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MULTIME.IN2" Source="UDINT2UDINT.OUT" dx1="195.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SECONDS_SINCE_REF.IN1" Source="DT_IN_REF_YEAR.OUT" dx1="0.0" dx2="-165.0" dy="415.0"/>
+      <Connection Destination="SECONDS_SINCE_REF_ULINT.IN" Source="SECONDS_SINCE_REF.OUT" dx1="145.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="NUM_SECONDS_ULINT.REQ" Source="NUM_SECONDS.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="NUM_SECONDS.REQ" Source="REQ" dx1="160.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="NUM_YEARS.REQ" Source="NUM_SECONDS_ULINT.CNF" dx1="160.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="DT_IN_REF_YEAR.REQ" Source="F_MULTIME.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MULTIME.REQ" Source="ONE_YEAR.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="NUM_DAYS.REQ" Source="SECONDS_SINCE_REF_ULINT.CNF" dx1="150.0" dx2="-85.0" dy="315.0"/>
+      <Connection Destination="NUM_DAYS_UINT.REQ" Source="NUM_DAYS.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="DOY.REQ" Source="NUM_DAYS_UINT.CNF" dx1="205.0" dx2="-245.0" dy="135.0"/>
+      <Connection Destination="CNF" Source="DOY.CNF" dx1="545.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="UDINT2UDINT.REQ" Source="NUM_YEARS.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ONE_YEAR.REQ" Source="UDINT2UDINT.CNF" dx1="30.0" dx2="-550.0" dy="0.0"/>
+      <Connection Destination="SECONDS_SINCE_REF.REQ" Source="DT_IN_REF_YEAR.CNF" dx1="145.0" dx2="0.0" dy="770.0"/>
+      <Connection Destination="SECONDS_SINCE_REF_ULINT.REQ" Source="SECONDS_SINCE_REF.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

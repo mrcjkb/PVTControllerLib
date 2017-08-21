@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Estimates underated PV power from derated PV power and deration factor." Name="FB_PDER_TO_P">
+  <Identification Description="Division by zero is avoided." Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-06-28" Organization="HTW Berlin" Version="0.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="PDER"/>
+        <With Var="DF"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Execution Confirmation" Name="CNF" Type="Event">
+        <With Var="P"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Derated power" Name="PDER" Type="LREAL"/>
+      <VarDeclaration Comment="Derating factor" Name="DF" Type="LREAL"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Non-derated power" Name="P" Type="LREAL"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="F_DIV" Type="F_DIV" x="2375.0" y="95.0"/>
+    <FB Name="F_EQ" Type="F_EQ" x="570.0" y="475.0">
+      <Parameter Name="IN2" Value="LREAL#0"/>
+    </FB>
+    <FB Name="F_SEL" Type="F_SEL" x="1140.0" y="570.0">
+      <Parameter Name="IN1" Value="LREAL#1"/>
+    </FB>
+    <FB Name="LREAL2LREAL" Type="LREAL2LREAL" x="1615.0" y="570.0"/>
+    <DataConnections>
+      <Connection Destination="F_EQ.IN1" Source="DF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL.IN0" Source="DF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL.G" Source="F_EQ.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL.IN" Source="F_SEL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_DIV.IN2" Source="LREAL2LREAL.OUT" dx1="160.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_DIV.IN1" Source="PDER" dx1="195.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="P" Source="F_DIV.OUT" dx1="145.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="F_EQ.REQ" Source="REQ" dx1="450.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL.REQ" Source="F_EQ.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL.REQ" Source="F_SEL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_DIV.REQ" Source="LREAL2LREAL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CNF" Source="F_DIV.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

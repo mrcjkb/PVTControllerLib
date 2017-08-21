@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Corrects forecast errors of the BatteryOptimizer FB." Name="PROGERRCTRL_DEB">
+  <Identification Description="IEC 61499 implementation of the &quot;PVprog&quot; algorithm.&#13;&#10;&#13;&#10;Original version's MIT license:&#13;&#10;&#13;&#10;Copyright (c) 2016 Joseph Bergner, Johannes Weniger, Tjarko Tjaden&#13;&#10;&#13;&#10;Permission is hereby granted, free of charge, to any person obtaining a copy&#13;&#10;of this software and associated documentation files (the &quot;Software&quot;), to deal&#13;&#10;in the Software without restriction, including without limitation the rights&#13;&#10;to use, copy, modify, merge, publish, distribute, sublicense, and/or sell&#13;&#10;copies of the Software, and to permit persons to whom the Software is&#13;&#10;furnished to do so, subject to the following conditions:&#13;&#10;&#13;&#10;The above copyright notice and this permission notice shall be included in all&#13;&#10;copies or substantial portions of the Software.&#13;&#10;&#13;&#10;THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE." Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-05-22" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Request" Name="INIT" Type="Event">
+        <With Var="QI"/>
+        <With Var="TLF"/>
+      </Event>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="PBR"/>
+        <With Var="PPV"/>
+        <With Var="PLD"/>
+        <With Var="LL"/>
+        <With Var="FL"/>
+        <With Var="PDIFF"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+      </Event>
+      <Event Comment="Execution Confirmation" Name="CNF" Type="Event">
+        <With Var="PB"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="Time frame forecasted ahead (looked forward) in h" InitialValue="15" Name="TLF" Type="LREAL"/>
+      <VarDeclaration ArraySize="96" Comment="Battery charge (positive)/discharge (negative) roadmap (power in W) over the forecast horizon" Name="PBR" Type="LREAL"/>
+      <VarDeclaration ArraySize="96" Comment="Power difference forecast in W (negative = PV deficit, positive = PV surplus)" Name="PDIFF" Type="LREAL"/>
+      <VarDeclaration Comment="Current PV power in W" Name="PPV" Type="LREAL"/>
+      <VarDeclaration Comment="Current load in W" Name="PLD" Type="LREAL"/>
+      <VarDeclaration Comment="Feed-in limitation in W (0 for none)" Name="FL" Type="LREAL"/>
+      <VarDeclaration Comment="Load limit in W (0 for none)" Name="LL" Type="LREAL"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration Comment="Set battery charging power in W (positive = charge, negative = discharge)" Name="PB" Type="LREAL"/>
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Comment="Number of time steps (15 min intervals) to look ahead for forecast" InitialValue="60" Name="LOOKFORWARDTIMEINTIMESTEPS" Type="UINT"/>
+      <VarDeclaration Comment="Current power difference (PPV - PLD)" InitialValue="" Name="PDIFFC" Type="LREAL"/>
+      <VarDeclaration Comment="Flag to check control conditions" InitialValue="" Name="CCFLAG" Type="BOOL"/>
+      <VarDeclaration Comment="Limit (feed-in or load) to check control condition against" InitialValue="" Name="LIMITCHK" Type="LREAL"/>
+      <VarDeclaration Comment="Flag to check whether battery charging (true) or discharging (false) needs to be corrected" InitialValue="" Name="BCDFLAG" Type="BOOL"/>
+    </InternalVars>
+    <ECC>
+      <ECState Comment="Initial State" Name="START" x="475.0" y="1125.0"/>
+      <ECState Comment="Initialization" Name="Init" x="1235.0" y="665.0">
+        <ECAction Algorithm="initialize" Output="INITO"/>
+      </ECState>
+      <ECState Comment="Normal execution" Name="InitErrorCtrl" x="2660.0" y="1425.0">
+        <ECAction Algorithm="initErrorCtrl"/>
+      </ECState>
+      <ECState Name="Initialized" x="1900.0" y="1140.0"/>
+      <ECState Name="DeInit" x="1140.0" y="1520.0">
+        <ECAction Algorithm="deInitialize" Output="INITO"/>
+      </ECState>
+      <ECState Name="CheckControlCondition" x="3610.0" y="1235.0">
+        <ECAction Algorithm="isControlCondition"/>
+      </ECState>
+      <ECState Name="NoControl" x="3420.0" y="1710.0">
+        <ECAction Algorithm="noCorrection" Output="CNF"/>
+      </ECState>
+      <ECState Name="ChargeControl" x="2375.0" y="855.0">
+        <ECAction Algorithm="limitCharge" Output="CNF"/>
+      </ECState>
+      <ECState Name="DischargeControl" x="2755.0" y="475.0">
+        <ECAction Algorithm="limitDischarge" Output="CNF"/>
+      </ECState>
+      <ECState Name="Correction" x="3990.0" y="760.0">
+        <ECAction Algorithm="correctSetPower"/>
+      </ECState>
+      <ECTransition Comment="" Condition="INIT[TRUE = QI]" Destination="Init" Source="START" x="840.0" y="920.0"/>
+      <ECTransition Comment="" Condition="1" Destination="Initialized" Source="Init" x="1660.0" y="975.0"/>
+      <ECTransition Comment="" Condition="REQ" Destination="InitErrorCtrl" Source="Initialized" x="2520.0" y="1180.0"/>
+      <ECTransition Comment="" Condition="1" Destination="START" Source="DeInit" x="940.0" y="1445.0"/>
+      <ECTransition Comment="" Condition="INIT[FALSE = QI]" Destination="DeInit" Source="Initialized" x="1690.0" y="1340.0"/>
+      <ECTransition Comment="" Condition="[CCFLAG = TRUE]" Destination="CheckControlCondition" Source="InitErrorCtrl" x="3125.0" y="1290.0"/>
+      <ECTransition Comment="" Condition="[CCFLAG = FALSE]" Destination="NoControl" Source="CheckControlCondition" x="3875.0" y="1575.0"/>
+      <ECTransition Comment="" Condition="1" Destination="Initialized" Source="NoControl" x="2135.0" y="1870.0"/>
+      <ECTransition Comment="" Condition="1" Destination="Initialized" Source="ChargeControl" x="2345.0" y="1030.0"/>
+      <ECTransition Comment="" Condition="1" Destination="Initialized" Source="DischargeControl" x="2095.0" y="615.0"/>
+      <ECTransition Comment="" Condition="[CCFLAG = TRUE]" Destination="Correction" Source="CheckControlCondition" x="4165.0" y="1060.0"/>
+      <ECTransition Comment="" Condition="[BCDFLAG = FALSE]" Destination="DischargeControl" Source="Correction" x="3645.0" y="720.0"/>
+      <ECTransition Comment="" Condition="[BCDFLAG = TRUE]" Destination="ChargeControl" Source="Correction" x="3415.0" y="1165.0"/>
+      <ECTransition Comment="" Condition="[CCFLAG = FALSE]" Destination="NoControl" Source="InitErrorCtrl" x="2890.0" y="1665.0"/>
+    </ECC>
+    <Algorithm Comment="Initialization algorithm" Name="initialize">
+      <ST Text="VAR&#13;&#10;&#9;tmp1 : LREAL;&#13;&#10;&#9;tmp2 : UINT;&#13;&#10;END_VAR;&#13;&#10;/*&#13;&#10; * Used internal vars &amp; inputs:&#13;&#10; * TLF, LOOKFORWARDTIMEINTIMESTEPS : UINT;&#13;&#10; */&#13;&#10;tmp1 := TLF * 4; // output resolution = 15 min&#13;&#10;tmp2 := LREAL_TO_UINT(tmp1);&#13;&#10;IF UINT_TO_LREAL(tmp2) &lt; tmp1 THEN &#13;&#10; &#9;LOOKFORWARDTIMEINTIMESTEPS := tmp2 + 1;&#13;&#10;ELSE&#13;&#10;&#9;LOOKFORWARDTIMEINTIMESTEPS := tmp2;&#13;&#10;END_IF;&#13;&#10;// Set output event qualifier&#13;&#10;QO := QI;"/>
+    </Algorithm>
+    <Algorithm Comment="Normally executed algorithm" Name="deInitialize">
+      <ST Text="QO := FALSE;"/>
+    </Algorithm>
+    <Algorithm Comment="Initializes variables for error control" Name="initErrorCtrl">
+      <ST Text="/*&#13;&#10; * Used internal vars &amp; inputs:&#13;&#10; * PDIFFC, PPV, PLD, FL, LL, LIMITCHK : LREAL;&#13;&#10; * CCFLAG, BCDFLAG : BOOL;&#13;&#10; */&#13;&#10;PDIFFC := PPV - PLD;&#13;&#10;IF (PDIFFC &gt; 0 AND FL &lt;&gt; 0) THEN // Surplus power  &amp; PV feed-in limitation&#13;&#10;&#9;LIMITCHK := FL;&#13;&#10;&#9;CCFLAG := TRUE;&#13;&#10;&#9;BCDFLAG := TRUE;&#13;&#10;ELSIF (PDIFFC &lt; 0 AND LL &lt;&gt; 0) THEN // Power deficit and load peak shaving&#13;&#10;&#9;LIMITCHK := LL;&#13;&#10;&#9;CCFLAG := TRUE;&#13;&#10;&#9;BCDFLAG := FALSE;&#13;&#10;ELSE // No control necessary&#13;&#10;&#9;CCFLAG := FALSE;&#13;&#10;END_IF;"/>
+    </Algorithm>
+    <Algorithm Comment="Checks whether control is necessary or not" Name="isControlCondition">
+      <ST Text="VAR&#13;&#10;&#9;cond1 : BOOL;&#13;&#10;&#9;cond2 : BOOL;&#13;&#10;&#9;cond3 : BOOL;&#13;&#10;&#9;maxDif : LREAL;&#13;&#10;&#9;absPDF : LREAL;&#13;&#10;&#9;absBCR : LREAL;&#13;&#10;&#9;absPDFC : LREAL;&#13;&#10;&#9;i : UINT;&#13;&#10;END_VAR;&#13;&#10;/*&#13;&#10; * Used internal vars &amp; inputs:&#13;&#10; * PBR,PDIFF, PDIFFC, LIMITCHK : LREAL;&#13;&#10; * CCFLAG : BOOL;&#13;&#10; */&#13;&#10;cond1 := FALSE;&#13;&#10;cond2 := FALSE;&#13;&#10;cond3 := FALSE;&#13;&#10;// Condition 1: The forecasted charging or discharging power for the current time step is not zero&#13;&#10;IF PBR[0] &lt;&gt; 0 THEN&#13;&#10;&#9;cond1 := TRUE;&#13;&#10;END_IF;&#13;&#10;/*&#13;&#10; * Condition 2: The current forecasted power difference [PPV-PLD] is greater than the maximum of the predicted&#13;&#10; * feed-in power over the forecast horizon.&#13;&#10; */&#13;&#10;maxDif := 0;&#13;&#10;FOR i := 0 TO LOOKFORWARDTIMEINTIMESTEPS - 1 BY 1 DO&#13;&#10;&#9;absPDF := PDIFF[i]; // ABS(PDIFF)&#13;&#10;&#9;IF absPDF &lt; 0 THEN&#13;&#10;&#9;&#9;absPDF := absPDF * (-1);&#13;&#10;&#9;END_IF;&#13;&#10;&#9;absBCR := PBR[i];  // ABS(PBR)&#13;&#10;&#9;IF absBCR &lt; 0 THEN&#13;&#10;&#9;&#9;absBCR := absBCR * (-1);&#13;&#10;&#9;END_IF;&#13;&#10;&#9;IF absPDF - absBCR &gt; maxDif THEN&#13;&#10;&#9;&#9;maxDif := absPDF - absBCR;&#13;&#10;&#9;END_IF;&#13;&#10;END_FOR;&#13;&#10;IF PDIFFC &gt;= 0 THEN // ABS(PDIFFC)&#13;&#10;&#9;absPDFC := PDIFFC;&#13;&#10;ELSE&#13;&#10;&#9;absPDFC := PDIFFC * (-1);&#13;&#10;END_IF;&#13;&#10;IF absPDFC &gt; maxDif THEN&#13;&#10;&#9;cond2 := TRUE;&#13;&#10;END_IF;&#13;&#10;// Condition 3: The current power difference is greater than the maximum permissible feed-in limitation&#13;&#10;IF LIMITCHK &lt; 0 THEN&#13;&#10;&#9;LIMITCHK := LIMITCHK * (-1);&#13;&#10;END_IF;&#13;&#10;IF absPDFC &gt; LIMITCHK THEN&#13;&#10;&#9;cond3 := TRUE;&#13;&#10;END_IF;&#13;&#10;IF (cond1 OR cond2 OR cond3) THEN&#13;&#10;&#9;CCFLAG := TRUE;&#13;&#10;ELSE&#13;&#10;&#9;CCFLAG := FALSE;&#13;&#10;&#9;PDIFFC := 0; // Set charging/discharging power to zero to prevent stepped adjustment&#13;&#10;END_IF;"/>
+    </Algorithm>
+    <Algorithm Comment="Sets the battery charge without correcting errors" Name="noCorrection">
+      <ST Text="PB := PDIFFC;"/>
+    </Algorithm>
+    <Algorithm Comment="Limits charging power to zero and greater" Name="limitCharge">
+      <ST Text="IF PB &lt; 0 THEN&#13;&#10;&#9;PB := 0;&#13;&#10;END_IF;"/>
+    </Algorithm>
+    <Algorithm Comment="Limits discharging power to zero and below" Name="limitDischarge">
+      <ST Text="IF PB &gt; 0 THEN&#13;&#10;&#9;PB := 0;&#13;&#10;END_IF;"/>
+    </Algorithm>
+    <Algorithm Comment="Corrects the set power according to forecast error" Name="correctSetPower">
+      <ST Text="PB := PBR[0] + PDIFFC - PDIFF[0];"/>
+    </Algorithm>
+  </BasicFB>
+</FBType>

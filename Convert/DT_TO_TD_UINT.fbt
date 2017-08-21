@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Converts DATE_AND_TIME to TD and DOY" Name="DT_TO_TD_UINT">
+  <Identification Description="Converts DATE_AND_TIME to TD (time of day in s since 00:00:00.000 [0,..1439]) and DOY (day of the year [1,..,365])&#13;&#10;" Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-06-05" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="DT"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Execution Confirmation" Name="CNF" Type="Event">
+        <With Var="TD"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input date" Name="DT" Type="DATE_AND_TIME"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Time of day in s [0,..,1439]" Name="TD" Type="UINT"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="F_DT_TO_TOD" Type="F_DT_TO_TOD" x="475.0" y="95.0"/>
+    <FB Name="F_SUB_TOD_TOD" Type="F_SUB_TOD_TOD" x="1425.0" y="95.0">
+      <Parameter Name="IN2" Value="#TOD00:00:00.000"/>
+    </FB>
+    <FB Name="F_DIV" Type="F_DIV" x="760.0" y="950.0">
+      <Parameter Name="IN2" Value="UINT#60"/>
+    </FB>
+    <FB Name="UINT2UINT" Type="UINT2UINT" x="1805.0" y="950.0"/>
+    <FB Name="F_TIME_TO_ULINT" Type="F_TIME_TO_ULINT" x="2090.0" y="95.0"/>
+    <DataConnections>
+      <Connection Destination="F_SUB_TOD_TOD.IN1" Source="F_DT_TO_TOD.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_DT_TO_TOD.IN" Source="DT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="UINT2UINT.IN" Source="F_DIV.OUT" dx1="370.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TD" Source="UINT2UINT.OUT" dx1="735.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_TIME_TO_ULINT.IN" Source="F_SUB_TOD_TOD.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_DIV.IN1" Source="F_TIME_TO_ULINT.OUT" dx1="0.0" dx2="-135.0" dy="-215.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="F_SUB_TOD_TOD.REQ" Source="F_DT_TO_TOD.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_DT_TO_TOD.REQ" Source="REQ" dx1="190.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="UINT2UINT.REQ" Source="F_DIV.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CNF" Source="UINT2UINT.CNF" dx1="675.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_TIME_TO_ULINT.REQ" Source="F_SUB_TOD_TOD.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_DIV.REQ" Source="F_TIME_TO_ULINT.CNF" dx1="140.0" dx2="0.0" dy="90.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

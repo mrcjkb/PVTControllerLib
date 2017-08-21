@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Sensor for receiving data from the BatterySensor plugin controller in Polysun" Name="BatterySensor">
+  <Identification Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-07-21" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Request" Name="INIT" Type="Event">
+        <With Var="QI"/>
+        <With Var="ID"/>
+        <With Var="TSF"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+        <With Var="STATUS"/>
+      </Event>
+      <Event Comment="Execution Confirmation" Name="IND" Type="Event">
+        <With Var="SOC"/>
+        <With Var="PB"/>
+        <With Var="TS"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="Connection identifier" Name="ID" Type="WSTRING"/>
+      <VarDeclaration Comment="Flag for whether to receive time stamp or not" Name="TSF" Type="BOOL"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration Comment="Service status" Name="STATUS" Type="WSTRING"/>
+      <VarDeclaration Comment="State of charge [0,..,1]" Name="SOC" Type="LREAL"/>
+      <VarDeclaration Comment="Battery transfer in W" Name="PB" Type="LREAL"/>
+      <VarDeclaration Comment="Time stamp (optional)" Name="TS" Type="DATE_AND_TIME"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="TSF_1_SERVER" Type="SERVER_0_3" x="2375.0" y="3990.0"/>
+    <FB Name="TSF_0_SERVER" Type="SERVER_0_2" x="2375.0" y="1520.0"/>
+    <FB Name="E_SWITCH" Type="E_SWITCH" x="1045.0" y="2755.0"/>
+    <FB Name="E_SPLIT" Type="E_SPLIT" x="3040.0" y="1425.0"/>
+    <FB Name="E_SPLIT_1" Type="E_SPLIT" x="3325.0" y="4085.0"/>
+    <FB Name="INITO_MERGE" Type="E_MERGE" x="2755.0" y="2755.0"/>
+    <FB Name="IND_MERGE" Type="E_MERGE" x="6555.0" y="2660.0"/>
+    <FB Name="QO_SEL" Type="F_SEL" x="4465.0" y="1900.0"/>
+    <FB Name="SOC_SEL" Type="F_SEL" x="7030.0" y="2945.0"/>
+    <FB Name="TSF_0_SOC" Type="LREAL2LREAL" x="4465.0" y="2850.0"/>
+    <FB Name="TSF_1_SOC" Type="LREAL2LREAL" x="4465.0" y="3705.0"/>
+    <FB Name="TSF_0_PB" Type="LREAL2LREAL" x="5890.0" y="2850.0"/>
+    <FB Name="TSF_1_PB" Type="LREAL2LREAL" x="5225.0" y="3800.0"/>
+    <FB Name="PB_SEL" Type="F_SEL" x="7600.0" y="3325.0"/>
+    <FB Name="BOOL2BOOL" Type="BOOL2BOOL" x="4990.0" y="1225.0"/>
+    <FB Name="F_CONCAT" Type="F_CONCAT" x="3515.0" y="2755.0"/>
+    <DataConnections>
+      <Connection Destination="TSF_1_SERVER.QI" Source="QI" dx1="190.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TSF_0_SERVER.QI" Source="QI" dx1="235.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TSF_1_SERVER.ID" Source="ID" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TSF_0_SERVER.ID" Source="ID" dx1="125.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH.G" Source="TSF" dx1="530.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="QO_SEL.G" Source="TSF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="QO_SEL.IN0" Source="TSF_0_SERVER.QO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="QO_SEL.IN1" Source="TSF_1_SERVER.QO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SOC_SEL.G" Source="TSF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TSF_0_SOC.IN" Source="TSF_0_SERVER.RD_1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TSF_1_SOC.IN" Source="TSF_1_SERVER.RD_1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SOC_SEL.IN0" Source="TSF_0_SOC.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SOC_SEL.IN1" Source="TSF_1_SOC.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TSF_0_PB.IN" Source="TSF_0_SERVER.RD_2" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TSF_1_PB.IN" Source="TSF_1_SERVER.RD_2" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TS" Source="TSF_1_SERVER.RD_3" dx1="3960.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PB_SEL.G" Source="TSF" dx1="160.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PB_SEL.IN0" Source="TSF_0_PB.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PB_SEL.IN1" Source="TSF_1_PB.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SOC" Source="SOC_SEL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PB" Source="PB_SEL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BOOL2BOOL.IN" Source="QO_SEL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="QO" Source="BOOL2BOOL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_CONCAT.IN1" Source="TSF_0_SERVER.STATUS" dx1="525.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_CONCAT.IN2" Source="TSF_1_SERVER.STATUS" dx1="435.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="STATUS" Source="F_CONCAT.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="E_SWITCH.EI" Source="INIT" dx1="710.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TSF_0_SERVER.INIT" Source="E_SWITCH.EO0" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TSF_1_SERVER.INIT" Source="E_SWITCH.EO1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TSF_0_SERVER.RSP" Source="E_SPLIT.EO1" dx1="0.0" dx2="0.0" dy="-280.0"/>
+      <Connection Destination="E_SPLIT_1.EI" Source="TSF_1_SERVER.IND" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TSF_1_SERVER.RSP" Source="E_SPLIT_1.EO1" dx1="0.0" dx2="0.0" dy="-250.0"/>
+      <Connection Destination="TSF_0_SOC.REQ" Source="E_SPLIT.EO2" dx1="925.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TSF_1_SOC.REQ" Source="E_SPLIT_1.EO2" dx1="260.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TSF_0_PB.REQ" Source="TSF_0_SOC.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TSF_1_PB.REQ" Source="TSF_1_SOC.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="IND_MERGE.EI1" Source="TSF_0_PB.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="IND_MERGE.EI2" Source="TSF_1_PB.CNF" dx1="180.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SOC_SEL.REQ" Source="IND_MERGE.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="PB_SEL.REQ" Source="SOC_SEL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="IND" Source="PB_SEL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BOOL2BOOL.REQ" Source="QO_SEL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SPLIT.EI" Source="TSF_0_SERVER.IND" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INITO_MERGE.EI1" Source="TSF_0_SERVER.INITO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INITO_MERGE.EI2" Source="TSF_1_SERVER.INITO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_CONCAT.REQ" Source="INITO_MERGE.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="QO_SEL.REQ" Source="F_CONCAT.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INITO" Source="BOOL2BOOL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

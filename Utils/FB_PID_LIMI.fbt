@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="PID controller with limited frame for the integrator." Name="FB_PID_LIMI">
+  <Identification Description="Rather than integrating the error over all vallues, the error is integrated over the last N values. Fixed-width time intervals are required for the input." Standard="61499-2"/>
+  <VersionInfo Author="4DIAC-IDE" Date="2017-06-15" Organization="4DIAC-Consortium" Version="0.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="ACT"/>
+        <With Var="SET"/>
+        <With Var="KP"/>
+        <With Var="KI"/>
+        <With Var="KD"/>
+        <With Var="N"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Execution Confirmation" Name="CNF" Type="Event">
+        <With Var="OUT"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Actual value" Name="ACT" Type="LREAL"/>
+      <VarDeclaration Comment="Set value" Name="SET" Type="LREAL"/>
+      <VarDeclaration Comment="Proportional coefficient" Name="KP" Type="LREAL"/>
+      <VarDeclaration Comment="Integral coefficient" Name="KI" Type="LREAL"/>
+      <VarDeclaration Comment="Derivative coefficient" Name="KD" Type="LREAL"/>
+      <VarDeclaration Comment="Amount of values to look back for integral computation" InitialValue="1" Name="N" Type="UINT"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output value = KP*(SET-ACT) + KI*INT_0_N(SET-ACT) + KD*DIFF(SET-ACT)" Name="OUT" Type="LREAL"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="ERROR" Type="F_SUB" x="1210.0" y="570.0"/>
+    <FB Name="SUM_ERROR" Type="F_SUM_LAST_N" x="2565.0" y="1425.0"/>
+    <FB Name="FB_SHIFT1_LREAL" Type="FB_SHIFT1_LREAL" x="2565.0" y="2280.0"/>
+    <FB Name="DIF_ERROR" Type="F_SUB" x="3325.0" y="2280.0"/>
+    <FB Name="F_MUL" Type="F_MUL" x="2470.0" y="760.0"/>
+    <FB Name="LREAL2LREAL" Type="LREAL2LREAL" x="1805.0" y="570.0"/>
+    <FB Name="LREAL2LREAL_1" Type="LREAL2LREAL" x="3040.0" y="570.0"/>
+    <FB Name="LREAL2LREAL_2" Type="LREAL2LREAL" x="3800.0" y="1520.0"/>
+    <FB Name="LREAL2LREAL_3" Type="LREAL2LREAL" x="3800.0" y="2280.0"/>
+    <FB Name="ADD_3" Type="ADD_3" x="4560.0" y="1235.0"/>
+    <FB Name="LREAL2LREAL_4" Type="LREAL2LREAL" x="5035.0" y="1235.0"/>
+    <FB Name="F_MUL_1" Type="F_MUL" x="3325.0" y="1520.0"/>
+    <FB Name="F_MUL_2" Type="F_MUL" x="4560.0" y="2375.0"/>
+    <FB Name="LREAL2LREAL_5" Type="LREAL2LREAL" x="5035.0" y="2375.0"/>
+    <DataConnections>
+      <Connection Destination="ERROR.IN1" Source="SET" dx1="645.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ERROR.IN2" Source="ACT" dx1="580.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SUM_ERROR.N" Source="N" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="DIF_ERROR.IN1" Source="FB_SHIFT1_LREAL.O1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="DIF_ERROR.IN2" Source="FB_SHIFT1_LREAL.O2" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MUL.IN2" Source="KP" dx1="535.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL.IN" Source="ERROR.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MUL.IN1" Source="LREAL2LREAL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_1.IN" Source="F_MUL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SUM_ERROR.SV" Source="LREAL2LREAL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_SHIFT1_LREAL.I" Source="LREAL2LREAL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_4.IN" Source="ADD_3.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="OUT" Source="LREAL2LREAL_4.OUT" dx1="165.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MUL_1.IN1" Source="SUM_ERROR.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MUL_1.IN2" Source="KI" dx1="495.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_2.IN" Source="F_MUL_1.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ADD_3.IN1" Source="LREAL2LREAL_1.OUT" dx1="855.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ADD_3.IN2" Source="LREAL2LREAL_2.OUT" dx1="120.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_3.IN" Source="DIF_ERROR.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MUL_2.IN1" Source="LREAL2LREAL_3.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MUL_2.IN2" Source="KD" dx1="470.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_5.IN" Source="F_MUL_2.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ADD_3.IN3" Source="LREAL2LREAL_5.OUT" dx1="165.0" dx2="0.0" dy="-385.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="ERROR.REQ" Source="REQ" dx1="930.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="DIF_ERROR.REQ" Source="FB_SHIFT1_LREAL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL.REQ" Source="ERROR.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MUL.REQ" Source="LREAL2LREAL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_1.REQ" Source="F_MUL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SUM_ERROR.REQ" Source="LREAL2LREAL_1.CNF" dx1="0.0" dx2="0.0" dy="230.0"/>
+      <Connection Destination="LREAL2LREAL_4.REQ" Source="ADD_3.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CNF" Source="LREAL2LREAL_4.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MUL_1.REQ" Source="SUM_ERROR.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_2.REQ" Source="F_MUL_1.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_3.REQ" Source="DIF_ERROR.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MUL_2.REQ" Source="LREAL2LREAL_3.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_5.REQ" Source="F_MUL_2.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="ADD_3.REQ" Source="LREAL2LREAL_5.CNF" dx1="0.0" dx2="-135.0" dy="50.0"/>
+      <Connection Destination="FB_SHIFT1_LREAL.REQ" Source="LREAL2LREAL_2.CNF" dx1="-35.0" dx2="0.0" dy="150.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

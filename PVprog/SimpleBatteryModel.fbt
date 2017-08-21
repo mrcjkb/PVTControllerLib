@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Simple battery model for pre-simulation of charge/discharge." Name="SimpleBatteryModel">
+  <Identification Description="Simple battery model for pre-simulation of charge/discharge. Simulates a charge/discharge requests with an array PV surplus/deficits, a given feed-in and/or load limitation and the battery's current state of charge. The simulation occurs based on characteristics, such as battery efficiency, inverter efficiency, etc.&#13;&#10;NOTE: It is recommended to replace this model with the manufacturer's battery model for more precise results.&#13;&#10;&#13;&#10;IEC 61499 implementation of the &quot;PVprog&quot; algorithm.&#13;&#10;&#13;&#10;Original version's MIT license:&#13;&#10;&#13;&#10;Copyright (c) 2016 Joseph Bergner, Johannes Weniger, Tjarko Tjaden&#13;&#10;&#13;&#10;Permission is hereby granted, free of charge, to any person obtaining a copy&#13;&#10;of this software and associated documentation files (the &quot;Software&quot;), to deal&#13;&#10;in the Software without restriction, including without limitation the rights&#13;&#10;to use, copy, modify, merge, publish, distribute, sublicense, and/or sell&#13;&#10;copies of the Software, and to permit persons to whom the Software is&#13;&#10;furnished to do so, subject to the following conditions:&#13;&#10;&#13;&#10;The above copyright notice and this permission notice shall be included in all&#13;&#10;copies or substantial portions of the Software.&#13;&#10;&#13;&#10;THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE." Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-05-17" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Update Request" Name="UD" Type="Event">
+        <With Var="SOC"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Update Confirmation" Name="UDCNF" Type="Event"/>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="State of charge of the battery [0..1]" InitialValue="0.2" Name="SOC" Type="LREAL"/>
+      <VarDeclaration Comment="Nominal battery capacity (energy) in kWh" Name="CN" Type="LREAL"/>
+      <VarDeclaration Comment="Battery efficiency when charging [0..1]" InitialValue="0.96" Name="EB_IN" Type="LREAL"/>
+      <VarDeclaration Comment="Battery efficiency when discharging [0..1]" InitialValue="0.96" Name="EB_OUT" Type="LREAL"/>
+      <VarDeclaration Comment="Battery inverter efficiency when charging [0..1]" InitialValue="0.96" Name="EBI_IN" Type="LREAL"/>
+      <VarDeclaration Comment="Battery inverter efficiency when discharging [0..1]" InitialValue="0.96" Name="EBI_OUT" Type="LREAL"/>
+      <VarDeclaration Comment="Upper limit to SOC (as specified by manufacturer) [0..1]" InitialValue="1" Name="SOCMAX" Type="LREAL"/>
+      <VarDeclaration Comment="Lower limit to SOC (as specified by manufacturer) [0..1]" InitialValue="0.2" Name="SOCMIN" Type="LREAL"/>
+    </InputVars>
+    <OutputVars/>
+    <Sockets>
+      <AdapterDeclaration Comment="Link to BatteryOptimizer" Name="BatteryOptimizerSck" Type="ABatteryModel"/>
+    </Sockets>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Comment="Energy stored in battery before simulation in kWh" InitialValue="" Name="CIN" Type="LREAL"/>
+      <VarDeclaration Comment="Maximum capacity in kWh" InitialValue="" Name="CMAX" Type="LREAL"/>
+      <VarDeclaration Comment="Minimum capacity in kWh" InitialValue="" Name="CMIN" Type="LREAL"/>
+    </InternalVars>
+    <ECC>
+      <ECState Comment="Initial State" Name="Idle" x="1520.0" y="1140.0"/>
+      <ECState Comment="Normal execution" Name="Simulating" x="2375.0" y="1140.0">
+        <ECAction Algorithm="simulateBattery" Output="BatteryOptimizerSck.SIMIN"/>
+      </ECState>
+      <ECState Name="Updating" x="855.0" y="1520.0">
+        <ECAction Algorithm="updateEnergyContents" Output="UDCNF"/>
+      </ECState>
+      <ECTransition Comment="" Condition="[BatteryOptimizerSck.SIM]" Destination="Simulating" Source="Idle" x="2125.0" y="965.0"/>
+      <ECTransition Comment="" Condition="1" Destination="Idle" Source="Simulating" x="2155.0" y="1440.0"/>
+      <ECTransition Comment="" Condition="1" Destination="Idle" Source="Updating" x="1145.0" y="1165.0"/>
+      <ECTransition Comment="" Condition="UD" Destination="Updating" Source="Idle" x="1410.0" y="1405.0"/>
+    </ECC>
+    <Algorithm Comment="Simulates battery charging/discharging" Name="simulateBattery">
+      <ST Text="IF BatteryOptimizerSck.ECD &gt; 0 THEN&#13;&#10;&#9;BatteryOptimizerSck.CSIM := CIN + EB_IN * EBI_IN * BatteryOptimizerSck.ECD; // charge&#13;&#10;&#9;IF BatteryOptimizerSck.CSIM &gt; CMAX THEN&#13;&#10;&#9;&#9;BatteryOptimizerSck.CSIM := CMAX; // limit to max capacity&#13;&#10;&#9;END_IF;&#13;&#10;ELSIF BatteryOptimizerSck.ECD &lt; 0 THEN&#13;&#10;&#9;BatteryOptimizerSck.CSIM := CIN + EB_OUT * EBI_OUT * BatteryOptimizerSck.ECD; // discharge&#13;&#10;&#9;IF BatteryOptimizerSck.CSIM &lt; CMIN THEN&#13;&#10;&#9;&#9;BatteryOptimizerSck.CSIM := CMIN; // limit to min capacity&#13;&#10;&#9;END_IF;&#13;&#10;ELSE&#13;&#10;&#9;BatteryOptimizerSck.CSIM := CIN;&#13;&#10;END_IF;"/>
+    </Algorithm>
+    <Algorithm Comment="Updates the battery's energy contents upon arrival of a new SOC measurement" Name="updateEnergyContents">
+      <ST Text="CIN := SOC * CN;&#13;&#10;CMAX := SOCMAX * CN;&#13;&#10;CMIN := SOCMIN * CN;"/>
+    </Algorithm>
+  </BasicFB>
+</FBType>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Client FB for delegating battery model simulations to an external server." Name="BatteryModelClient">
+  <Identification Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-06-18" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Request" Name="INIT" Type="Event">
+        <With Var="QI"/>
+        <With Var="ID"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+        <With Var="STATUS"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="Connection Identifier" Name="ID" Type="WSTRING"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration Comment="Service Status" Name="STATUS" Type="WSTRING"/>
+    </OutputVars>
+    <Sockets>
+      <AdapterDeclaration Comment="Link to BatteryOptimizer" Name="BatteryOptimizerSck" Type="ABatteryModel" x="1900.0" y="380.0"/>
+    </Sockets>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="CLIENT_1" Type="CLIENT_1" x="1045.0" y="380.0"/>
+    <DataConnections>
+      <Connection Destination="CLIENT_1.QI" Source="QI" dx1="180.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CLIENT_1.ID" Source="ID" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="QO" Source="CLIENT_1.QO" dx1="170.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CLIENT_1.SD_1" Source="BatteryOptimizerSck.ECD" dx1="255.0" dx2="-235.0" dy="210.0"/>
+      <Connection Destination="BatteryOptimizerSck.CSIM" Source="CLIENT_1.RD_1" dx1="310.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="STATUS" Source="CLIENT_1.STATUS" dx1="265.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="CLIENT_1.INIT" Source="INIT" dx1="970.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INITO" Source="CLIENT_1.INITO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CLIENT_1.REQ" Source="BatteryOptimizerSck.SIM" dx1="90.0" dx2="-195.0" dy="-285.0"/>
+      <Connection Destination="BatteryOptimizerSck.SIMIN" Source="CLIENT_1.CNF" dx1="325.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

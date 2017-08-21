@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Client FB for delegating battery model simulations to an external plugin in Polysun." Name="PolysunBatteryModel">
+  <Identification Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-06-18" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Request" Name="INIT" Type="Event">
+        <With Var="QI"/>
+        <With Var="ID"/>
+      </Event>
+      <Event Comment="Release Event" Name="R" Type="Event"/>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+        <With Var="STATUS"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="Connection Identifier" Name="ID" Type="WSTRING"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration Comment="Service Status" Name="STATUS" Type="WSTRING"/>
+    </OutputVars>
+    <Sockets>
+      <AdapterDeclaration Comment="Link to BatteryOptimizer" Name="BatteryOptimizerSck" Type="ABatteryModel" x="2945.0" y="665.0"/>
+    </Sockets>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="SERVER" Type="SERVER_2" x="1615.0" y="285.0"/>
+    <FB Name="E_PERMIT" Type="E_PERMIT" x="2375.0" y="570.0"/>
+    <FB Name="E_TF" Type="E_TF" x="855.0" y="855.0"/>
+    <DataConnections>
+      <Connection Destination="SERVER.QI" Source="QI" dx1="195.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SERVER.ID" Source="ID" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="QO" Source="SERVER.QO" dx1="165.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="STATUS" Source="SERVER.STATUS" dx1="240.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BatteryOptimizerSck.CSIM" Source="SERVER.RD_2" dx1="70.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SERVER.SD_2" Source="BatteryOptimizerSck.ECD" dx1="-30.0" dx2="0.0" dy="240.0"/>
+      <Connection Destination="E_PERMIT.PERMIT" Source="SERVER.RD_1" dx1="790.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SERVER.SD_1" Source="E_TF.Q" dx1="190.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="SERVER.INIT" Source="INIT" dx1="275.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INITO" Source="SERVER.INITO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_PERMIT.EI" Source="SERVER.IND" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BatteryOptimizerSck.SIMIN" Source="E_PERMIT.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_TF.TRUE" Source="BatteryOptimizerSck.SIM" dx1="125.0" dx2="0.0" dy="525.0"/>
+      <Connection Destination="E_TF.FALSE" Source="R" dx1="150.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SERVER.RSP" Source="E_TF.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

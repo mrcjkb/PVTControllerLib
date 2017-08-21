@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Function block template for holding historical power measurements and generating power forecasts." Name="PowerForecaster">
+  <Identification Description="IEC 61499 implementation of the &quot;PVprog&quot; algorithm.&#13;&#10;&#13;&#10;Original version's MIT license:&#13;&#10;&#13;&#10;Copyright (c) 2016 Joseph Bergner, Johannes Weniger, Tjarko Tjaden&#13;&#10;&#13;&#10;Permission is hereby granted, free of charge, to any person obtaining a copy&#13;&#10;of this software and associated documentation files (the &quot;Software&quot;), to deal&#13;&#10;in the Software without restriction, including without limitation the rights&#13;&#10;to use, copy, modify, merge, publish, distribute, sublicense, and/or sell&#13;&#10;copies of the Software, and to permit persons to whom the Software is&#13;&#10;furnished to do so, subject to the following conditions:&#13;&#10;&#13;&#10;The above copyright notice and this permission notice shall be included in all&#13;&#10;copies or substantial portions of the Software.&#13;&#10;&#13;&#10;THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE." Standard="61499-2"/>
+  <VersionInfo Author="4DIAC-IDE" Date="2017-05-03" Organization="4DIAC-Consortium" Version="0.0"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-05-03" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Request" Name="INIT" Type="Event">
+        <With Var="QI"/>
+        <With Var="TLB"/>
+        <With Var="TLF"/>
+      </Event>
+      <Event Comment="Forecast Update Request" Name="UD" Type="Event">
+        <With Var="P"/>
+        <With Var="TD"/>
+        <With Var="DOY"/>
+      </Event>
+      <Event Comment="Forecast Request" Name="FREQ" Type="Event">
+        <With Var="TD"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+      </Event>
+      <Event Comment="Update Algorithm Execution Confirmation" Name="UDCNF" Type="Event"/>
+      <Event Comment="Forecast Confirmation" Name="FCNF" Type="Event">
+        <With Var="PF"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="Time frame to look back when generating forecasts in h" InitialValue="3" Name="TLB" Type="LREAL"/>
+      <VarDeclaration Comment="Time frame to forecast ahead (look forward) in h" InitialValue="15" Name="TLF" Type="LREAL"/>
+      <VarDeclaration Comment="Measured power in W" Name="P" Type="LREAL"/>
+      <VarDeclaration Comment="Day of the year [1..365]" InitialValue="1" Name="DOY" Type="UINT"/>
+      <VarDeclaration Comment="Time of day [min] [0..1439]" InitialValue="0" Name="TD" Type="UINT"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration ArraySize="96" Comment="Forecasted power in W" Name="PF" Type="LREAL"/>
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Comment="Number of time steps (minutes) to look back when generating forecasts" InitialValue="" Name="LOOKBACKTIMEINTIMESTEPS" Type="UINT"/>
+      <VarDeclaration Comment="Number of time steps (15 min intervals) to look ahead for forecast" InitialValue="" Name="LOOKFORWARDTIMEINTIMESTEPS" Type="UINT"/>
+      <VarDeclaration Comment="Time frame to look back when generating forecasts in h" InitialValue="" Name="LOOKBACKTIMEINHOURS" Type="LREAL"/>
+      <VarDeclaration Comment="Time frame to forecast ahead in h" InitialValue="" Name="LOOKFORWARDTIMEINHOURS" Type="LREAL"/>
+      <VarDeclaration ArraySize="1440" Comment="Stores the historical PV power [W] of the last day" InitialValue="" Name="POWERLASTDAY" Type="LREAL"/>
+      <VarDeclaration ArraySize="1440" Comment="Stores the historical PV power [W] of the current day" InitialValue="" Name="POWERCURRDAY" Type="LREAL"/>
+      <VarDeclaration Comment="Time at the point of the last call of the prepareForecast algorithm" InitialValue="-1" Name="LASTTIMESTEP" Type="INT"/>
+      <VarDeclaration Comment="Day of the year [1...365] of the last call of the prepareForecast algorithm" InitialValue="0" Name="LASTDAYOFYEAR" Type="UINT"/>
+      <VarDeclaration Comment="Time [min] between last update and current one" InitialValue="1" Name="TIMESINCELASTUPDATE" Type="INT"/>
+      <VarDeclaration Comment="Power P [W] input when last update occurred" InitialValue="0" Name="LASTMEASUREDPOWER" Type="LREAL"/>
+      <VarDeclaration Comment="Power (either current or interpolated) [W] used for updating memory" InitialValue="0" Name="PU" Type="LREAL"/>
+      <VarDeclaration Comment="Time index (either current or interpolated) [min] used for updating memory" InitialValue="0" Name="TIMEINDEX" Type="UINT"/>
+    </InternalVars>
+    <ECC>
+      <ECState Comment="Initial State" Name="START" x="380.0" y="935.0"/>
+      <ECState Comment="Initialization" Name="Init" x="1140.0" y="475.0">
+        <ECAction Algorithm="initialize" Output="INITO"/>
+      </ECState>
+      <ECState Comment="Normal execution" Name="UpdateOp" x="2185.0" y="475.0">
+        <ECAction Algorithm="analyzeInputs"/>
+      </ECState>
+      <ECState Name="Initialized" x="1805.0" y="950.0"/>
+      <ECState Name="DeInit" x="1045.0" y="1330.0">
+        <ECAction Algorithm="deInitialize" Output="INITO"/>
+      </ECState>
+      <ECState Name="Forecasting" x="1900.0" y="1710.0">
+        <ECAction Algorithm="getForecast" Output="FCNF"/>
+      </ECState>
+      <ECState Name="Interpolation" x="4465.0" y="1140.0">
+        <ECAction Algorithm="interpolate"/>
+      </ECState>
+      <ECState Name="NormalUpdate" x="2850.0" y="1425.0">
+        <ECAction Algorithm="updateMemory"/>
+      </ECState>
+      <ECState Name="EndUpdateOp" x="2185.0" y="950.0">
+        <ECAction Algorithm="prepareForNextUpdate" Output="UDCNF"/>
+      </ECState>
+      <ECState Name="InterpolatedUpdate" x="3895.0" y="1710.0">
+        <ECAction Algorithm="updateMemory"/>
+      </ECState>
+      <ECState Name="NormalUpdateInit" x="3515.0" y="760.0">
+        <ECAction Algorithm="initNormalUpdate"/>
+      </ECState>
+      <ECState Name="InterpolationInit" x="3800.0" y="380.0">
+        <ECAction Algorithm="initInterpolation"/>
+      </ECState>
+      <ECTransition Comment="" Condition="1" Destination="START" Source="DeInit" x="840.0" y="1195.0"/>
+      <ECTransition Comment="" Condition="INIT[TRUE = QI]" Destination="Init" Source="START" x="775.0" y="755.0"/>
+      <ECTransition Comment="" Condition="1" Destination="Initialized" Source="Init" x="1435.0" y="875.0"/>
+      <ECTransition Comment="" Condition="INIT[FALSE = QI]" Destination="DeInit" Source="Initialized" x="1510.0" y="1155.0"/>
+      <ECTransition Comment="" Condition="1" Destination="Initialized" Source="Forecasting" x="1910.0" y="1445.0"/>
+      <ECTransition Comment="" Condition="FREQ" Destination="Forecasting" Source="Initialized" x="2390.0" y="1330.0"/>
+      <ECTransition Comment="" Condition="UD" Destination="UpdateOp" Source="Initialized" x="2010.0" y="615.0"/>
+      <ECTransition Comment="" Condition="1" Destination="Initialized" Source="EndUpdateOp" x="2205.0" y="845.0"/>
+      <ECTransition Comment="" Condition="1" Destination="EndUpdateOp" Source="NormalUpdate" x="2690.0" y="1335.0"/>
+      <ECTransition Comment="" Condition="[TIMESINCELASTUPDATE &lt;= 1]" Destination="NormalUpdateInit" Source="UpdateOp" x="2945.0" y="710.0"/>
+      <ECTransition Comment="" Condition="[TIMESINCELASTUPDATE &gt; 1]" Destination="InterpolationInit" Source="UpdateOp" x="3225.0" y="165.0"/>
+      <ECTransition Comment="" Condition="1" Destination="Interpolation" Source="InterpolationInit" x="5075.0" y="650.0"/>
+      <ECTransition Comment="" Condition="1" Destination="InterpolatedUpdate" Source="Interpolation" x="4215.0" y="1390.0"/>
+      <ECTransition Comment="" Condition="[TIMEINDEX &lt; (TD - 1)]" Destination="Interpolation" Source="InterpolatedUpdate" x="4700.0" y="1610.0"/>
+      <ECTransition Comment="" Condition="[TIMEINDEX &gt;= (TD - 1)]" Destination="NormalUpdateInit" Source="InterpolatedUpdate" x="4065.0" y="1135.0"/>
+      <ECTransition Comment="" Condition="1" Destination="NormalUpdate" Source="NormalUpdateInit" x="3600.0" y="1300.0"/>
+    </ECC>
+    <Algorithm Comment="Initialization algorithm" Name="initialize">
+      <ST Text="VAR&#13;&#10;&#9;tmp1 : LREAL;&#13;&#10;&#9;tmp2 : UINT;&#13;&#10;END_VAR;&#13;&#10;/*&#13;&#10; * Used internal vars &amp; inputs:&#13;&#10; * TLB, TLF, LOOKBACKTIMEINHOURS, LOOKFORWARDTIMEINHOURS : LREAL;&#13;&#10; * LOOKBACKTIMEINTIMESTEPS, LOOKFORWARDTIMEINTIMESTEPS : UINT;&#13;&#10; * QO : BOOL;&#13;&#10; */&#13;&#10;// Limit inputs to acceptable boundaries&#13;&#10;IF TLB &lt; 0 THEN&#13;&#10;&#9;TLB := 0;&#13;&#10;ELSIF TLB &gt; 24 THEN&#13;&#10;&#9;TLB := 24;&#13;&#10;END_IF;&#13;&#10;LOOKBACKTIMEINHOURS := TLB;&#13;&#10;// Workaround for ceil function&#13;&#10;tmp1 := LOOKBACKTIMEINHOURS * 60; // input resolution = 1 min&#13;&#10;tmp2 := LREAL_TO_UINT(tmp1);&#13;&#10;IF UINT_TO_LREAL(tmp2) &lt; tmp1 THEN &#13;&#10; &#9;LOOKBACKTIMEINTIMESTEPS := tmp2 + 1;&#13;&#10;ELSE&#13;&#10;&#9;LOOKBACKTIMEINTIMESTEPS := tmp2;&#13;&#10;END_IF;&#13;&#10;// Set forecast horizon&#13;&#10;IF TLF &lt; 0 THEN&#13;&#10;&#9;TLF := 0;&#13;&#10;ELSIF TLF &gt; 24 THEN&#13;&#10;&#9;TLF := 24;&#13;&#10;END_IF;&#13;&#10;LOOKFORWARDTIMEINHOURS := TLF;&#13;&#10;tmp1 := LOOKFORWARDTIMEINHOURS * 4; // output resolution = 15 min&#13;&#10;tmp2 := LREAL_TO_UINT(tmp1);&#13;&#10;IF UINT_TO_LREAL(tmp2) &lt; tmp1 THEN &#13;&#10; &#9;LOOKFORWARDTIMEINTIMESTEPS := tmp2 + 1;&#13;&#10;ELSE&#13;&#10;&#9;LOOKFORWARDTIMEINTIMESTEPS := tmp2;&#13;&#10;END_IF;&#13;&#10;QO := QI; // Pass Input event qualifier to output event qualifier"/>
+    </Algorithm>
+    <Algorithm Comment="Deinitialization algorithm" Name="deInitialize">
+      <ST Text="VAR&#13;&#10;&#9;j : UINT;&#13;&#10;END_VAR;&#13;&#10;// Reset all internal variables to initial values&#13;&#10;FOR j := 0 TO 1439 BY 1 DO&#13;&#10;&#9;POWERCURRDAY[j] := 0;&#13;&#10;&#9;POWERLASTDAY[j] := 0;&#13;&#10;END_FOR;&#13;&#10;LASTDAYOFYEAR := 0;&#13;&#10;LASTTIMESTEP := -1;&#13;&#10;LASTMEASUREDPOWER := 0;&#13;&#10;QO := FALSE;"/>
+    </Algorithm>
+    <Algorithm Comment="Stores power data and prepares it for forecast generation. Specific implementations may have to add their own code." Name="analyzeInputs">
+      <ST Text="// NOTE: Specific implementations may have to add their own code&#13;&#10;VAR&#13;&#10;&#9;i : UINT;&#13;&#10;END_VAR;&#13;&#10;/*&#13;&#10; * Used internal vars &amp; inputs:&#13;&#10; * DOY, LASTDAYPFYEAR, TD : UINT;&#13;&#10; * TIMESINCELASTUPDATE, LASTTIMESTEP : INT;&#13;&#10; * POWERLASTDAY, POWERCURRDAY : LREAL;&#13;&#10; */&#13;&#10;TIMESINCELASTUPDATE := UINT_TO_INT(TD) - LASTTIMESTEP;&#13;&#10;// At the beginning of each day, replace LASTDAY arrays with CURRDAY arrays&#13;&#10;IF DOY &lt;&gt; LASTDAYOFYEAR THEN&#13;&#10;&#9;FOR i := 0 TO 1439 BY 1 DO&#13;&#10;&#9;&#9;POWERLASTDAY[i] := POWERCURRDAY[i];&#13;&#10;&#9;END_FOR;&#13;&#10;&#9;LASTDAYOFYEAR := DOY;&#13;&#10;&#9;TIMESINCELASTUPDATE := 1; // Set to 1 minute for beginning of day&#13;&#10;END_IF;&#13;&#10;&#9;"/>
+    </Algorithm>
+    <Algorithm Comment="Generates forecast from currently stored power data. Abstract: Algorithm must be implemented by specific implementations." Name="getForecast">
+      <ST Text="// Algorithm must be implemented by specific implementations"/>
+    </Algorithm>
+    <Algorithm Comment="Updates the memory with measured or interpolated power data. Abstract: Algorithm must be implemented by specific implementations." Name="updateMemory">
+      <ST Text="// Algorithm must be implemented by specific implementations"/>
+    </Algorithm>
+    <Algorithm Comment="Interpolates between last and currently measured PV data" Name="interpolate">
+      <ST Text="/*&#13;&#10; * Used internal vars &amp; inputs:&#13;&#10; * INTERPOLATIONINCREMENT, LASTMEASUREDPOWER, P, PU  : LREAL;&#13;&#10; * TD, TIMEINDEX  : UINT;&#13;&#10; */&#13;&#10;// Linear interpolation between last measured power and currently measured power&#13;&#10;PU := PU + (P - LASTMEASUREDPOWER) / INT_TO_LREAL(TIMESINCELASTUPDATE);&#13;&#10;TIMEINDEX := TIMEINDEX + 1;"/>
+    </Algorithm>
+    <Algorithm Comment="Saves the current inputs for next update" Name="prepareForNextUpdate">
+      <ST Text="/*&#13;&#10; * Used internal vars &amp; inputs:&#13;&#10; * LASTMEASUREDPOWER : LREAL;&#13;&#10; * LASTTIMESTEP : INT;&#13;&#10; * TD : UINT;&#13;&#10; */&#13;&#10;LASTMEASUREDPOWER := P;&#13;&#10;LASTTIMESTEP := UINT_TO_INT(TD);"/>
+    </Algorithm>
+    <Algorithm Comment="Sets memory update inputs PU and TIMEINDEX to current values" Name="initNormalUpdate">
+      <ST Text="/*&#13;&#10; * Used internal vars &amp; inputs:&#13;&#10; * P, PU : LREAL;&#13;&#10; * TD, TIMEINDEX : UINT;&#13;&#10; */&#13;&#10;PU := P;&#13;&#10;TIMEINDEX := TD;"/>
+    </Algorithm>
+    <Algorithm Comment="Sets tieme index to initialize interpolation" Name="initInterpolation">
+      <ST Text="/*&#13;&#10; * Used internal vars &amp; inputs:&#13;&#10; * TD, TIMEINDEX : UINT;&#13;&#10; * TIMESINCELASTUPDATE : INT;&#13;&#10; * LASTMEASUREDPOWER, PU : LREAL;&#13;&#10; */&#13;&#10; // Initialize TIMEINDEX and PU for interpolation&#13;&#10;TIMEINDEX := TD - INT_TO_UINT(TIMESINCELASTUPDATE) + 1;&#13;&#10;PU := LASTMEASUREDPOWER;"/>
+    </Algorithm>
+  </BasicFB>
+</FBType>
