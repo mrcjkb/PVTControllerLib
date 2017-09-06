@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Stores arriving data and releases the time weighted mean since the last GET event upon every GET event." Name="F_TIME_WEIGHTED_MEAN_LREAL">
+  <Identification Description="Stores arriving data and releases the time weighted mean since the last GET event upon every GET event.&#13;&#10;The elapsed time between values is determined via the time stamp." Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-06-13" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Normal Execution Request" Name="UD" Type="Event">
+        <With Var="X"/>
+        <With Var="TSI"/>
+      </Event>
+      <Event Name="GET" Type="Event"/>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="New average arrived" Name="CNF" Type="Event">
+        <With Var="Y"/>
+        <With Var="TSO"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input data" Name="X" Type="LREAL"/>
+      <VarDeclaration Comment="Time stamp" Name="TSI" Type="DATE_AND_TIME"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="N minute mean of X" Name="Y" Type="LREAL"/>
+      <VarDeclaration Comment="Time stamp" Name="TSO" Type="DATE_AND_TIME"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="FB_SHIFT1_DT" Type="FB_SHIFT1_DT" x="570.0" y="950.0"/>
+    <FB Name="UD_TIME" Type="F_SUB_DT_DT" x="1995.0" y="950.0"/>
+    <FB Name="F_TIME_TO_LREAL" Type="F_TIME_TO_LREAL" x="2565.0" y="950.0"/>
+    <FB Name="F_SHIFT1_DT_0" Type="FB_SHIFT1_DT" x="570.0" y="1520.0"/>
+    <FB Name="TOTAL_TIME" Type="F_SUB_DT_DT" x="1330.0" y="1520.0"/>
+    <FB Name="F_TIME_TO_LREAL_1" Type="F_TIME_TO_LREAL" x="2185.0" y="1520.0"/>
+    <FB Name="F_MUL" Type="F_MUL" x="3420.0" y="475.0"/>
+    <FB Name="F_DIV" Type="F_DIV" x="3135.0" y="1520.0"/>
+    <FB Name="E_INIT_CHK_1" Type="E_INIT_CHK" x="1330.0" y="380.0"/>
+    <FB Name="F_ACCUM_LREAL" Type="F_ACCUM_LREAL" x="4085.0" y="570.0"/>
+    <FB Name="E_SPLIT" Type="E_SPLIT" x="3705.0" y="1425.0"/>
+    <FB Name="FB_LAST_LREAL" Type="FB_LAST_LREAL" x="5035.0" y="1140.0"/>
+    <DataConnections>
+      <Connection Destination="FB_SHIFT1_DT.I" Source="TSI" dx1="185.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="UD_TIME.IN1" Source="FB_SHIFT1_DT.O1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="UD_TIME.IN2" Source="FB_SHIFT1_DT.O2" dx1="210.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_TIME_TO_LREAL.IN" Source="UD_TIME.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SHIFT1_DT_0.I" Source="TSI" dx1="185.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TOTAL_TIME.IN1" Source="F_SHIFT1_DT_0.O1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TOTAL_TIME.IN2" Source="F_SHIFT1_DT_0.O2" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_TIME_TO_LREAL_1.IN" Source="TOTAL_TIME.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MUL.IN1" Source="X" dx1="225.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MUL.IN2" Source="F_TIME_TO_LREAL.OUT" dx1="175.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_ACCUM_LREAL.IN" Source="F_MUL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_DIV.IN2" Source="F_TIME_TO_LREAL_1.OUT" dx1="1370.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_DIV.IN1" Source="F_ACCUM_LREAL.OUT" dx1="30.0" dx2="0.0" dy="-50.0"/>
+      <Connection Destination="TSO" Source="TSI" dx1="4570.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_LAST_LREAL.SD" Source="F_DIV.OUT" dx1="1545.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Y" Source="FB_LAST_LREAL.RD" dx1="145.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="F_TIME_TO_LREAL.REQ" Source="UD_TIME.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SHIFT1_DT_0.REQ" Source="GET" dx1="140.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TOTAL_TIME.REQ" Source="F_SHIFT1_DT_0.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_TIME_TO_LREAL_1.REQ" Source="TOTAL_TIME.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MUL.REQ" Source="F_TIME_TO_LREAL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_INIT_CHK_1.REQ" Source="FB_SHIFT1_DT.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="UD_TIME.REQ" Source="E_INIT_CHK_1.NOINIT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_SHIFT1_DT.REQ" Source="E_INIT_CHK_1.INIT" dx1="0.0" dx2="0.0" dy="-450.0"/>
+      <Connection Destination="F_ACCUM_LREAL.REQ" Source="F_MUL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_DIV.REQ" Source="F_TIME_TO_LREAL_1.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SPLIT.EI" Source="F_DIV.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_ACCUM_LREAL.R" Source="E_SPLIT.EO1" dx1="0.0" dx2="0.0" dy="125.0"/>
+      <Connection Destination="FB_SHIFT1_DT.REQ" Source="UD" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_LAST_LREAL.REQ" Source="E_SPLIT.EO2" dx1="815.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_LAST_LREAL.R" Source="F_ACCUM_LREAL.CNF" dx1="310.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CNF" Source="FB_LAST_LREAL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

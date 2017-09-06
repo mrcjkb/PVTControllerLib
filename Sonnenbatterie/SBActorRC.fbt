@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Actor for setting the battery transfer of a Sonnenbatterie in slave mode via its RESTful API" Name="SBActorRC">
+  <Identification Description="Requires the http communication layer.&#13;&#10;This function block makes use of CLNTRC FBs (see Utils subdirectory of this library) instead of CLIENT FBs." Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-08-27" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Request" Name="INIT" Type="Event">
+        <With Var="QI"/>
+        <With Var="ID"/>
+      </Event>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="QI"/>
+        <With Var="PB"/>
+        <With Var="TCR"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+      </Event>
+      <Event Comment="Execution Confirmation" Name="CNF" Type="Event">
+        <With Var="QO"/>
+        <With Var="STATUS"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="Connection identifier (ip:port)" Name="ID" Type="WSTRING"/>
+      <VarDeclaration Comment="Battery transfer (positive = charge, negative = discharge)" Name="PB" Type="LREAL"/>
+      <VarDeclaration Comment="Indicator for trickle charge (true if battery was just released from trickle charge)" Name="TCR" Type="BOOL"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration Comment="HTTP responses" Name="STATUS" Type="WSTRING"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="generalPath" Type="F_CONCAT" x="1710.0" y="760.0">
+      <Parameter Name="IN2" Value="WSTRING#/rest/devices/battery/"/>
+    </FB>
+    <FB Name="chargePath" Type="F_CONCAT" x="3515.0" y="380.0">
+      <Parameter Name="IN2" Value="WSTRING#C24]"/>
+    </FB>
+    <FB Name="dischargePath" Type="F_CONCAT" x="3515.0" y="1045.0">
+      <Parameter Name="IN2" Value="WSTRING#C23]"/>
+    </FB>
+    <FB Name="WSTRING2WSTRING" Type="WSTRING2WSTRING" x="2280.0" y="760.0"/>
+    <FB Name="F_GT" Type="F_GT" x="1045.0" y="2470.0">
+      <Parameter Name="IN2" Value="LREAL#0"/>
+    </FB>
+    <FB Name="E_SWITCH" Type="E_SWITCH" x="1615.0" y="2470.0"/>
+    <FB Name="NoDischargeAfterTrickleCharge" Type="F_SEL" x="2375.0" y="1805.0">
+      <Parameter Name="IN1" Value="LREAL#0"/>
+    </FB>
+    <FB Name="Pdischarge" Type="F_MUL" x="4085.0" y="1900.0">
+      <Parameter Name="IN2" Value="LREAL#-1"/>
+    </FB>
+    <FB Name="LREAL2LREAL" Type="LREAL2LREAL" x="3325.0" y="1805.0"/>
+    <FB Name="LREAL2LREAL_1" Type="LREAL2LREAL" x="4560.0" y="1900.0"/>
+    <FB Name="E_MERGE" Type="E_MERGE" x="6365.0" y="1710.0"/>
+    <FB Name="WSTRING2WSTRING_1" Type="WSTRING2WSTRING" x="6935.0" y="2565.0"/>
+    <FB Name="WSTRING2WSTRING_2" Type="WSTRING2WSTRING" x="6990.0" y="3135.0"/>
+    <FB Name="F_CONCAT" Type="F_CONCAT" x="8020.0" y="1605.0"/>
+    <FB Name="F_OR" Type="F_OR" x="6935.0" y="1805.0"/>
+    <FB Name="F_CONCAT_1" Type="F_CONCAT" x="950.0" y="285.0">
+      <Parameter Name="IN1" Value="WSTRING#http["/>
+    </FB>
+    <FB Name="WSTRING2WSTRING_3" Type="WSTRING2WSTRING" x="1520.0" y="190.0"/>
+    <FB Name="discharge" Type="CLNTRC_1" x="5605.0" y="1045.0"/>
+    <FB Name="charge" Type="CLNTRC_1" x="5605.0" y="2470.0"/>
+    <DataConnections>
+      <Connection Destination="WSTRING2WSTRING.IN" Source="generalPath.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="chargePath.IN1" Source="WSTRING2WSTRING.OUT" dx1="150.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="dischargePath.IN1" Source="WSTRING2WSTRING.OUT" dx1="145.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_GT.IN1" Source="PB" dx1="440.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH.G" Source="F_GT.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="NoDischargeAfterTrickleCharge.G" Source="TCR" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="NoDischargeAfterTrickleCharge.IN0" Source="PB" dx1="435.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL.IN" Source="NoDischargeAfterTrickleCharge.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Pdischarge.IN1" Source="LREAL2LREAL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_1.IN" Source="Pdischarge.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_CONCAT.IN1" Source="WSTRING2WSTRING_1.OUT" dx1="120.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_CONCAT.IN2" Source="WSTRING2WSTRING_2.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="STATUS" Source="F_CONCAT.OUT" dx1="325.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="QO" Source="F_OR.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_CONCAT_1.IN2" Source="ID" dx1="285.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="WSTRING2WSTRING_3.IN" Source="F_CONCAT_1.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="generalPath.IN1" Source="WSTRING2WSTRING_3.OUT" dx1="0.0" dx2="0.0" dy="-125.0"/>
+      <Connection Destination="discharge.QI" Source="QI" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="discharge.ID" Source="dischargePath.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="discharge.SD_1" Source="LREAL2LREAL_1.OUT" dx1="155.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_OR.IN1" Source="discharge.QO" dx1="175.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="WSTRING2WSTRING_1.IN" Source="discharge.RD_1" dx1="200.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="charge.QI" Source="QI" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="charge.ID" Source="chargePath.OUT" dx1="1390.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="charge.SD_1" Source="PB" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_OR.IN2" Source="charge.QO" dx1="430.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="WSTRING2WSTRING_2.IN" Source="charge.RD_1" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="WSTRING2WSTRING.REQ" Source="generalPath.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="chargePath.REQ" Source="WSTRING2WSTRING.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="dischargePath.REQ" Source="chargePath.CNF" dx1="0.0" dx2="0.0" dy="115.0"/>
+      <Connection Destination="F_GT.REQ" Source="REQ" dx1="645.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH.EI" Source="F_GT.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="NoDischargeAfterTrickleCharge.REQ" Source="E_SWITCH.EO0" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL.REQ" Source="NoDischargeAfterTrickleCharge.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Pdischarge.REQ" Source="LREAL2LREAL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="LREAL2LREAL_1.REQ" Source="Pdischarge.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="WSTRING2WSTRING_2.REQ" Source="WSTRING2WSTRING_1.CNF" dx1="0.0" dx2="0.0" dy="65.0"/>
+      <Connection Destination="F_CONCAT.REQ" Source="WSTRING2WSTRING_2.CNF" dx1="140.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CNF" Source="F_CONCAT.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_OR.REQ" Source="E_MERGE.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="WSTRING2WSTRING_1.REQ" Source="F_OR.CNF" dx1="180.0" dx2="0.0" dy="50.0"/>
+      <Connection Destination="F_CONCAT_1.REQ" Source="INIT" dx1="720.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="WSTRING2WSTRING_3.REQ" Source="F_CONCAT_1.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="generalPath.REQ" Source="WSTRING2WSTRING_3.CNF" dx1="145.0" dx2="-165.0" dy="110.0"/>
+      <Connection Destination="discharge.INIT" Source="dischargePath.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="discharge.REQ" Source="LREAL2LREAL_1.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_MERGE.EI1" Source="discharge.CNF" dx1="230.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="charge.INIT" Source="discharge.INITO" dx1="0.0" dx2="0.0" dy="-40.0"/>
+      <Connection Destination="charge.REQ" Source="E_SWITCH.EO1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INITO" Source="charge.INITO" dx1="120.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_MERGE.EI2" Source="charge.CNF" dx1="140.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Combines the SBActor and SBCalibrator function blocks" Name="SBCActorRC">
+  <Identification Description="Requires the http communication layer.&#13;&#10;This function block makes use of CLNTRC FBs (see Utils subdirectory of this library) instead of CLIENT FBs." Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-08-27" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Request" Name="INIT" Type="Event">
+        <With Var="QI"/>
+        <With Var="ID"/>
+      </Event>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="QI"/>
+        <With Var="PB"/>
+        <With Var="SOC"/>
+        <With Var="PTR"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+      </Event>
+      <Event Comment="Execution Confirmation" Name="CNF" Type="Event">
+        <With Var="QO"/>
+        <With Var="STATUS"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="Connection identifier (ip:port)" Name="ID" Type="WSTRING"/>
+      <VarDeclaration Comment="Battery transfer (positive = charge, negative = discharge) in W" Name="PB" Type="LREAL"/>
+      <VarDeclaration Comment="State of charge [0,..,1]" Name="SOC" Type="LREAL"/>
+      <VarDeclaration Comment="Power used to release from trickle charge in W" Name="PTR" Type="LREAL"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration Comment="HTTP response codes" Name="STATUS" Type="WSTRING"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="F_AND" Type="F_AND" x="3150.0" y="1355.0"/>
+    <FB Name="F_CONCAT" Type="F_CONCAT" x="3990.0" y="1520.0"/>
+    <FB Name="SBActorRC" Type="SBActorRC" x="2090.0" y="760.0"/>
+    <FB Name="SBCalibratorRC" Type="SBCalibratorRC" x="1235.0" y="1520.0"/>
+    <DataConnections>
+      <Connection Destination="QO" Source="F_AND.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="STATUS" Source="F_CONCAT.OUT" dx1="185.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SBActorRC.QI" Source="QI" dx1="225.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SBActorRC.ID" Source="ID" dx1="190.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SBActorRC.PB" Source="PB" dx1="360.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_AND.IN1" Source="SBActorRC.QO" dx1="245.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_CONCAT.IN1" Source="SBActorRC.STATUS" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SBCalibratorRC.QI" Source="QI" dx1="230.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SBCalibratorRC.ID" Source="ID" dx1="185.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SBCalibratorRC.SOC" Source="SOC" dx1="150.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SBCalibratorRC.PTR" Source="PTR" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_AND.IN2" Source="SBCalibratorRC.QO" dx1="500.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_CONCAT.IN2" Source="SBCalibratorRC.STATUS" dx1="2060.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SBActorRC.TCR" Source="SBCalibratorRC.TCR" dx1="200.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="F_CONCAT.REQ" Source="F_AND.CNF" dx1="170.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CNF" Source="F_CONCAT.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INITO" Source="SBActorRC.INITO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_AND.REQ" Source="SBActorRC.CNF" dx1="350.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SBCalibratorRC.INIT" Source="INIT" dx1="300.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SBCalibratorRC.REQ" Source="REQ" dx1="255.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SBActorRC.INIT" Source="SBCalibratorRC.INITO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SBActorRC.REQ" Source="SBCalibratorRC.CNF" dx1="135.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

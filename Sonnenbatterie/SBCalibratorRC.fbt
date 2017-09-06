@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Sonnenbatterie calibrator. Sets the battery's control mode to automatic for calibration while fully charged." Name="SBCalibratorRC">
+  <Identification Description="Requires the http communication layer.&#13;&#10;This function block makes use of CLNTRC FBs (see Utils subdirectory of this library) instead of CLIENT FBs." Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-08-27" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Event" Name="INIT" Type="Event">
+        <With Var="QI"/>
+        <With Var="ID"/>
+      </Event>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="SOC"/>
+        <With Var="QI"/>
+        <With Var="PTR"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+      </Event>
+      <Event Comment="Execution Confirmation" Name="CNF" Type="Event">
+        <With Var="QO"/>
+        <With Var="STATUS"/>
+        <With Var="TCR"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="Connection identifier (ip:port)" Name="ID" Type="WSTRING"/>
+      <VarDeclaration Comment="State of charge [0,..,1]" Name="SOC" Type="LREAL"/>
+      <VarDeclaration Comment="Power used to release from trickle charge in W" Name="PTR" Type="LREAL"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration Comment="HTTP responses" Name="STATUS" Type="WSTRING"/>
+      <VarDeclaration Comment="true, if battery has just been released from trickle charge" Name="TCR" Type="BOOL"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="FullyCharged" Type="F_GE" x="2185.0" y="3230.0">
+      <Parameter Name="IN2" Value="LREAL#1"/>
+    </FB>
+    <FB Name="TrickleCharge" Type="F_EQ" x="2185.0" y="4560.0">
+      <Parameter Name="IN2" Value="UINT#42"/>
+    </FB>
+    <FB Name="NonAuto" Type="F_GE" x="2185.0" y="3895.0">
+      <Parameter Name="IN2" Value="UINT#20"/>
+    </FB>
+    <FB Name="F_AND" Type="F_AND" x="2850.0" y="3610.0"/>
+    <FB Name="NotFull" Type="F_LT" x="2185.0" y="1045.0">
+      <Parameter Name="IN2" Value="LREAL#0.95"/>
+    </FB>
+    <FB Name="AutoActive" Type="F_LT" x="2185.0" y="1995.0">
+      <Parameter Name="IN2" Value="UINT#20"/>
+    </FB>
+    <FB Name="F_GT" Type="F_GT" x="2185.0" y="2565.0">
+      <Parameter Name="IN2" Value="UINT#30"/>
+    </FB>
+    <FB Name="F_OR" Type="F_OR" x="2850.0" y="2280.0"/>
+    <FB Name="F_AND_1" Type="F_AND" x="4085.0" y="1995.0"/>
+    <FB Name="BOOL2BOOL" Type="BOOL2BOOL" x="3325.0" y="2280.0"/>
+    <FB Name="E_SWITCH" Type="E_SWITCH" x="3420.0" y="3610.0"/>
+    <FB Name="E_SWITCH_1" Type="E_SWITCH" x="2850.0" y="4560.0"/>
+    <FB Name="E_SWITCH_2" Type="E_SWITCH" x="4560.0" y="1995.0"/>
+    <FB Name="E_DELAY" Type="E_DELAY" x="6080.0" y="1330.0">
+      <Parameter Name="DT" Value="T#2s"/>
+    </FB>
+    <FB Name="F_CONCAT" Type="F_CONCAT" x="2280.0" y="380.0">
+      <Parameter Name="IN1" Value="WSTRING#http["/>
+    </FB>
+    <FB Name="F_CONCAT_1" Type="F_CONCAT" x="3705.0" y="475.0">
+      <Parameter Name="IN2" Value="WSTRING#/rest/devices/battery/"/>
+    </FB>
+    <FB Name="WSTRING2WSTRING" Type="WSTRING2WSTRING" x="2850.0" y="380.0"/>
+    <FB Name="Write_mode_ID" Type="F_CONCAT" x="5225.0" y="570.0">
+      <Parameter Name="IN2" Value="WSTRING#C06]"/>
+    </FB>
+    <FB Name="WSTRING2WSTRING_1" Type="WSTRING2WSTRING" x="4275.0" y="475.0"/>
+    <FB Name="Write_charge_ID" Type="F_CONCAT" x="4180.0" y="3990.0">
+      <Parameter Name="IN2" Value="WSTRING#C24]"/>
+    </FB>
+    <FB Name="WSTRING2WSTRING_2" Type="WSTRING2WSTRING" x="5985.0" y="570.0"/>
+    <FB Name="WSTRING2WSTRING_3" Type="WSTRING2WSTRING" x="4750.0" y="4085.0"/>
+    <FB Name="E_DELAY_1" Type="E_DELAY" x="6840.0" y="3705.0">
+      <Parameter Name="DT" Value="T#10s"/>
+    </FB>
+    <FB Name="E_DELAY_2" Type="E_DELAY" x="9310.0" y="4750.0">
+      <Parameter Name="DT" Value="T#20s"/>
+    </FB>
+    <FB Name="E_DELAY_3" Type="E_DELAY" x="9215.0" y="1710.0">
+      <Parameter Name="DT" Value="T#10s"/>
+    </FB>
+    <FB Name="TrickleChargeRelease" Type="E_TF" x="11020.0" y="1995.0"/>
+    <FB Name="E_MERGE" Type="E_MERGE" x="9785.0" y="1995.0"/>
+    <FB Name="Read_mode_ID" Type="F_CONCAT" x="7030.0" y="0.0">
+      <Parameter Name="IN2" Value="WSTRING#M06]"/>
+    </FB>
+    <FB Name="WSTRING2WSTRING_12" Type="WSTRING2WSTRING" x="7980.0" y="95.0"/>
+    <FB Name="F_AND_2" Type="F_AND" x="7980.0" y="2090.0"/>
+    <FB Name="F_OR_1" Type="F_OR" x="9215.0" y="2850.0"/>
+    <FB Name="BOOL2BOOL_2" Type="BOOL2BOOL" x="9785.0" y="2945.0"/>
+    <FB Name="F_AND_3" Type="F_AND" x="8075.0" y="4085.0"/>
+    <FB Name="BOOL2BOOL_3" Type="BOOL2BOOL" x="8550.0" y="4085.0"/>
+    <FB Name="F_OR_2" Type="F_OR" x="11115.0" y="3610.0"/>
+    <FB Name="BOOL2BOOL_1" Type="BOOL2BOOL" x="8455.0" y="2090.0"/>
+    <FB Name="FB_SEL_WSTRING" Type="FB_SEL_WSTRING" x="14440.0" y="3420.0">
+      <Parameter Name="IN0" Value="WSTRING#SBCALIBRATOR_ERROR"/>
+      <Parameter Name="IN1" Value="WSTRING#OK"/>
+    </FB>
+    <FB Name="BOOL2BOOL_4" Type="BOOL2BOOL" x="11590.0" y="3610.0"/>
+    <FB Name="F_AND_4" Type="F_AND" x="12350.0" y="3230.0"/>
+    <FB Name="BatteryMode" Type="CLNTRC_UINT_0_1" x="665.0" y="1900.0"/>
+    <FB Name="Auto1" Type="CLNTRC_UINT_1" x="5320.0" y="1805.0">
+      <Parameter Name="QI" Value="TRUE"/>
+      <Parameter Name="SD_1" Value="UINT#10"/>
+    </FB>
+    <FB Name="Manual1" Type="CLNTRC_UINT_1" x="7125.0" y="1805.0">
+      <Parameter Name="QI" Value="TRUE"/>
+      <Parameter Name="SD_1" Value="UINT#55"/>
+    </FB>
+    <FB Name="Auto2" Type="CLNTRC_UINT_1" x="5225.0" y="3230.0">
+      <Parameter Name="QI" Value="TRUE"/>
+      <Parameter Name="SD_1" Value="UINT#10"/>
+    </FB>
+    <FB Name="Manual2" Type="CLNTRC_UINT_1" x="6080.0" y="4275.0">
+      <Parameter Name="QI" Value="TRUE"/>
+      <Parameter Name="SD_1" Value="UINT#55"/>
+    </FB>
+    <FB Name="Charge" Type="CLNTRC_1" x="7315.0" y="4560.0">
+      <Parameter Name="QI" Value="TRUE"/>
+    </FB>
+    <FB Name="E_TF" Type="E_TF" x="10545.0" y="2660.0"/>
+    <FB Name="F_OR_3" Type="F_OR" x="13775.0" y="2850.0"/>
+    <FB Name="BOOL2BOOL_5" Type="BOOL2BOOL" x="12920.0" y="3230.0"/>
+    <DataConnections>
+      <Connection Destination="FullyCharged.IN1" Source="SOC" dx1="300.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_AND.IN1" Source="FullyCharged.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_AND.IN2" Source="NonAuto.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="NotFull.IN1" Source="SOC" dx1="300.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_OR.IN2" Source="F_GT.OUT" dx1="155.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_AND_1.IN1" Source="NotFull.OUT" dx1="1460.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BOOL2BOOL.IN" Source="F_OR.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_AND_1.IN2" Source="BOOL2BOOL.OUT" dx1="160.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH.G" Source="F_AND.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH_1.G" Source="TrickleCharge.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH_2.G" Source="F_AND_1.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_CONCAT.IN2" Source="ID" dx1="420.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="WSTRING2WSTRING.IN" Source="F_CONCAT.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_CONCAT_1.IN1" Source="WSTRING2WSTRING.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="WSTRING2WSTRING_1.IN" Source="F_CONCAT_1.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Write_mode_ID.IN1" Source="WSTRING2WSTRING_1.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Write_charge_ID.IN1" Source="WSTRING2WSTRING_1.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="WSTRING2WSTRING_2.IN" Source="Write_mode_ID.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="WSTRING2WSTRING_3.IN" Source="Write_charge_ID.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TCR" Source="TrickleChargeRelease.Q" dx1="885.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Read_mode_ID.IN1" Source="WSTRING2WSTRING_1.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="WSTRING2WSTRING_12.IN" Source="Read_mode_ID.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_OR.IN1" Source="AutoActive.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BOOL2BOOL_2.IN" Source="F_OR_1.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BOOL2BOOL_3.IN" Source="F_AND_3.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BOOL2BOOL_1.IN" Source="F_AND_2.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_OR_1.IN1" Source="BOOL2BOOL_1.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_OR_2.IN2" Source="BOOL2BOOL_3.OUT" dx1="230.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_OR_2.IN1" Source="BOOL2BOOL_2.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="STATUS" Source="FB_SEL_WSTRING.OUT" dx1="235.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BOOL2BOOL_4.IN" Source="F_OR_2.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_AND_4.IN2" Source="BOOL2BOOL_4.OUT" dx1="190.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BatteryMode.QI" Source="QI" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BatteryMode.ID" Source="WSTRING2WSTRING_12.OUT" dx1="0.0" dx2="0.0" dy="-1215.0"/>
+      <Connection Destination="F_AND_4.IN1" Source="BatteryMode.QO" dx1="4670.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="AutoActive.IN1" Source="BatteryMode.RD_1" dx1="-115.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_GT.IN1" Source="BatteryMode.RD_1" dx1="-35.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="NonAuto.IN1" Source="BatteryMode.RD_1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TrickleCharge.IN1" Source="BatteryMode.RD_1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Auto1.ID" Source="WSTRING2WSTRING_2.OUT" dx1="85.0" dx2="-180.0" dy="0.0"/>
+      <Connection Destination="F_AND_2.IN2" Source="Auto1.QO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Manual1.ID" Source="WSTRING2WSTRING_2.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_AND_2.IN1" Source="Manual1.QO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Auto2.ID" Source="WSTRING2WSTRING_2.OUT" dx1="0.0" dx2="-150.0" dy="280.0"/>
+      <Connection Destination="F_OR_1.IN2" Source="Auto2.QO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Manual2.ID" Source="WSTRING2WSTRING_2.OUT" dx1="0.0" dx2="-190.0" dy="0.0"/>
+      <Connection Destination="F_AND_3.IN1" Source="Manual2.QO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Charge.ID" Source="WSTRING2WSTRING_3.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Charge.SD_1" Source="PTR" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_AND_3.IN2" Source="Charge.QO" dx1="155.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_OR_3.IN2" Source="BOOL2BOOL_5.OUT" dx1="300.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_SEL_WSTRING.QI" Source="F_OR_3.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="QO" Source="F_OR_3.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BOOL2BOOL_5.IN" Source="F_AND_4.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_OR_3.IN1" Source="E_TF.Q" dx1="2730.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="BOOL2BOOL.REQ" Source="F_OR.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_AND_1.REQ" Source="BOOL2BOOL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="NonAuto.REQ" Source="FullyCharged.CNF" dx1="180.0" dx2="0.0" dy="150.0"/>
+      <Connection Destination="F_AND.REQ" Source="NonAuto.CNF" dx1="215.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH.EI" Source="F_AND.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH_1.EI" Source="TrickleCharge.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH_2.EI" Source="F_AND_1.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FullyCharged.REQ" Source="E_SWITCH_2.EO0" dx1="110.0" dx2="-165.0" dy="445.0"/>
+      <Connection Destination="WSTRING2WSTRING.REQ" Source="F_CONCAT.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_CONCAT_1.REQ" Source="WSTRING2WSTRING.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="WSTRING2WSTRING_1.REQ" Source="F_CONCAT_1.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Write_mode_ID.REQ" Source="WSTRING2WSTRING_1.CNF" dx1="190.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="WSTRING2WSTRING_2.REQ" Source="Write_mode_ID.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TrickleCharge.REQ" Source="E_SWITCH.EO0" dx1="0.0" dx2="0.0" dy="255.0"/>
+      <Connection Destination="WSTRING2WSTRING_3.REQ" Source="Write_charge_ID.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_MERGE.EI1" Source="E_DELAY_3.EO" dx1="525.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_CONCAT.REQ" Source="INIT" dx1="795.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Read_mode_ID.REQ" Source="WSTRING2WSTRING_2.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="WSTRING2WSTRING_12.REQ" Source="Read_mode_ID.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="AutoActive.REQ" Source="NotFull.CNF" dx1="0.0" dx2="0.0" dy="150.0"/>
+      <Connection Destination="F_GT.REQ" Source="AutoActive.CNF" dx1="130.0" dx2="0.0" dy="155.0"/>
+      <Connection Destination="F_OR.REQ" Source="F_GT.CNF" dx1="185.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BOOL2BOOL_2.REQ" Source="F_OR_1.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BOOL2BOOL_3.REQ" Source="F_AND_3.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BOOL2BOOL_1.REQ" Source="F_AND_2.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_DELAY_3.START" Source="BOOL2BOOL_1.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BOOL2BOOL_4.REQ" Source="F_OR_2.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_AND_4.REQ" Source="BOOL2BOOL_4.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_DELAY_2.START" Source="BOOL2BOOL_3.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TrickleChargeRelease.TRUE" Source="E_DELAY_2.EO" dx1="715.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CNF" Source="FB_SEL_WSTRING.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BatteryMode.INIT" Source="WSTRING2WSTRING_12.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BatteryMode.REQ" Source="REQ" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="NotFull.REQ" Source="BatteryMode.CNF" dx1="215.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Auto1.INIT" Source="BatteryMode.INITO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Auto1.REQ" Source="E_SWITCH_2.EO1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_DELAY.START" Source="Auto1.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Manual1.INIT" Source="Auto1.INITO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Manual1.REQ" Source="E_DELAY.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Write_charge_ID.REQ" Source="Manual1.INITO" dx1="145.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_AND_2.REQ" Source="Manual1.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Auto2.INIT" Source="WSTRING2WSTRING_3.CNF" dx1="0.0" dx2="-305.0" dy="250.0"/>
+      <Connection Destination="Auto2.REQ" Source="E_SWITCH.EO1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Manual2.INIT" Source="Auto2.INITO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Manual2.REQ" Source="E_SWITCH_1.EO1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_DELAY_1.START" Source="Manual2.CNF" dx1="25.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Charge.INIT" Source="Manual2.INITO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="Charge.REQ" Source="E_DELAY_1.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INITO" Source="Charge.INITO" dx1="7150.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_AND_3.REQ" Source="Charge.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_TF.TRUE" Source="E_SWITCH_1.EO0" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_TF.FALSE" Source="E_MERGE.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TrickleChargeRelease.FALSE" Source="E_TF.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_SEL_WSTRING.REQ" Source="F_OR_3.CNF" dx1="220.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_OR_3.REQ" Source="BOOL2BOOL_5.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="BOOL2BOOL_5.REQ" Source="F_AND_4.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_MERGE.EI2" Source="Auto2.CNF" dx1="3900.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_OR_1.REQ" Source="TrickleChargeRelease.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_OR_2.REQ" Source="BOOL2BOOL_2.CNF" dx1="200.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

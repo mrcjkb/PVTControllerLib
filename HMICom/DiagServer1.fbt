@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Sends sensor data and diagnostic data over a network upon reques. Wrapper for a SERVER function block." Name="DiagServer1">
+  <Identification Description="A client can request measurements and diagnostic data from this function block.&#13;&#10;Requests should be made in regular intervals according to the data input DT." Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-08-27" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Request" Name="INIT" Type="Event">
+        <With Var="ID"/>
+        <With Var="DT"/>
+      </Event>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="SD_1"/>
+        <With Var="DI"/>
+        <With Var="QI"/>
+        <With Var="TS"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+        <With Var="STATUS"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Connection identifier" Name="ID" Type="WSTRING"/>
+      <VarDeclaration Comment="Client request interval" InitialValue="T#1m" Name="DT" Type="TIME"/>
+      <VarDeclaration Comment="Time stamp" Name="TS" Type="DATE_AND_TIME"/>
+      <VarDeclaration Comment="Input data" Name="SD_1" Type="LREAL"/>
+      <VarDeclaration Comment="Diagnostic qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="Diagnostic info" Name="DI" Type="WSTRING"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration Comment="Service status" Name="STATUS" Type="WSTRING"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="WSTRING2STRING" Type="F_WSTRING_TO_STRING" x="2470.0" y="1520.0"/>
+    <FB Name="SERVER" Type="SERVER_2_0" x="3800.0" y="570.0">
+      <Parameter Name="QI" Value="TRUE"/>
+    </FB>
+    <FB Name="F_SEL" Type="FB_SEL_WSTRING" x="1425.0" y="1520.0">
+      <Parameter Name="IN1" Value="WSTRING#OK"/>
+    </FB>
+    <FB Name="F_N_MIN_MEAN_LREAL" Type="F_N_MIN_MEAN_LREAL" x="1805.0" y="285.0"/>
+    <FB Name="E_SPLIT" Type="E_SPLIT" x="1235.0" y="190.0"/>
+    <DataConnections>
+      <Connection Destination="SERVER.ID" Source="ID" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SERVER.SD_2" Source="WSTRING2STRING.OUT" dx1="195.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="QO" Source="SERVER.QO" dx1="190.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="STATUS" Source="SERVER.STATUS" dx1="240.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL.IN0" Source="DI" dx1="340.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="WSTRING2STRING.IN" Source="F_SEL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL.QI" Source="QI" dx1="450.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_N_MIN_MEAN_LREAL.TSI" Source="TS" dx1="715.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_N_MIN_MEAN_LREAL.X" Source="SD_1" dx1="1015.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_N_MIN_MEAN_LREAL.N" Source="DT" dx1="565.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SERVER.SD_1" Source="F_N_MIN_MEAN_LREAL.Y" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="SERVER.INIT" Source="INIT" dx1="2870.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INITO" Source="SERVER.INITO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL.REQ" Source="INIT" dx1="910.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="WSTRING2STRING.REQ" Source="F_SEL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SERVER.RSP" Source="SERVER.IND" dx1="295.0" dx2="0.0" dy="-330.0"/>
+      <Connection Destination="E_SPLIT.EI" Source="REQ" dx1="740.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL.REQ" Source="E_SPLIT.EO2" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_N_MIN_MEAN_LREAL.REQ" Source="E_SPLIT.EO1" dx1="155.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

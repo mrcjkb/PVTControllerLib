@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Stores 1-min resolved data for 1 day and sends it over a network upon request. Wrapper for a SERVER function block." Name="DPFServer">
+  <Identification Description="A client can request measurements (averaged since the last request) and diagnostic data from this function block." Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-08-27" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Request" Name="INIT" Type="Event">
+        <With Var="ID"/>
+        <With Var="QI"/>
+      </Event>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="SD"/>
+        <With Var="TS"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+        <With Var="STATUS"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="Connection identifier" Name="ID" Type="WSTRING"/>
+      <VarDeclaration Comment="Input data" Name="SD" Type="LREAL"/>
+      <VarDeclaration Comment="Time stamp" Name="TS" Type="DATE_AND_TIME"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration Comment="Service status" Name="STATUS" Type="WSTRING"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="F_N_MIN_MEAN_LREAL" Type="F_N_MIN_MEAN_LREAL" x="855.0" y="1330.0">
+      <Parameter Name="N" Value="T#1m"/>
+    </FB>
+    <FB Name="DT_TO_TD_UINT" Type="DT_TO_TD_UINT" x="1995.0" y="1900.0"/>
+    <FB Name="SERVER" Type="SERVER_2_0" x="3420.0" y="570.0"/>
+    <FB Name="FB_SAVE_1D" Type="FB_SAVE_1D" x="3040.0" y="1615.0"/>
+    <DataConnections>
+      <Connection Destination="F_N_MIN_MEAN_LREAL.X" Source="SD" dx1="375.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_N_MIN_MEAN_LREAL.TSI" Source="TS" dx1="215.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="DT_TO_TD_UINT.DT" Source="F_N_MIN_MEAN_LREAL.TSO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SERVER.ID" Source="ID" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="QO" Source="SERVER.QO" dx1="190.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="STATUS" Source="SERVER.STATUS" dx1="240.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SERVER.SD_2" Source="F_N_MIN_MEAN_LREAL.TSO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_SAVE_1D.TD" Source="DT_TO_TD_UINT.TD" dx1="390.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_SAVE_1D.SD" Source="F_N_MIN_MEAN_LREAL.Y" dx1="1340.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SERVER.SD_1" Source="FB_SAVE_1D.RD" dx1="0.0" dx2="0.0" dy="-125.0"/>
+      <Connection Destination="SERVER.QI" Source="QI" dx1="2095.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="F_N_MIN_MEAN_LREAL.REQ" Source="REQ" dx1="735.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="DT_TO_TD_UINT.REQ" Source="F_N_MIN_MEAN_LREAL.CNF1" dx1="470.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SERVER.INIT" Source="INIT" dx1="2195.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INITO" Source="SERVER.INITO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_SAVE_1D.REQ" Source="DT_TO_TD_UINT.CNF" dx1="185.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SERVER.RSP" Source="SERVER.IND" dx1="130.0" dx2="0.0" dy="-210.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

@@ -18,15 +18,18 @@
   <FBNetwork>
     <FB Name="E_SR" Type="E_SR" x="1045.0" y="760.0"/>
     <FB Name="E_SWITCH" Type="E_SWITCH" x="380.0" y="380.0"/>
+    <FB Name="E_PERMIT" Type="E_PERMIT" x="1615.0" y="855.0"/>
     <DataConnections>
       <Connection Destination="E_SWITCH.G" Source="E_SR.Q" dx1="0.0" dx2="0.0" dy="270.0"/>
+      <Connection Destination="E_PERMIT.PERMIT" Source="E_SR.Q" dx1="0.0" dx2="0.0" dy="0.0"/>
     </DataConnections>
     <EventConnections>
       <Connection Destination="E_SWITCH.EI" Source="REQ" dx1="300.0" dx2="0.0" dy="0.0"/>
       <Connection Destination="E_SR.R" Source="R" dx1="-55.0" dx2="0.0" dy="0.0"/>
       <Connection Destination="E_SR.S" Source="E_SWITCH.EO0" dx1="0.0" dx2="0.0" dy="70.0"/>
-      <Connection Destination="INIT" Source="E_SR.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
       <Connection Destination="NOINIT" Source="E_SWITCH.EO1" dx1="560.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INIT" Source="E_PERMIT.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_PERMIT.EI" Source="E_SR.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
     </EventConnections>
   </FBNetwork>
 </FBType>

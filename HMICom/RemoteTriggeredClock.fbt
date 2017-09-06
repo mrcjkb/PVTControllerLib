@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Used to initialize/update a time stamp and start a clock remotely." Name="RemoteTriggeredClock">
+  <Identification Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-08-27" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Request" Name="INIT" Type="Event">
+        <With Var="QI"/>
+        <With Var="ID"/>
+        <With Var="DT"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+        <With Var="STATUS"/>
+      </Event>
+      <Event Comment="Execution Confirmation" Name="IND" Type="Event">
+        <With Var="QO"/>
+        <With Var="TS"/>
+        <With Var="STATUS"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="Connection identifier" Name="ID" Type="WSTRING"/>
+      <VarDeclaration Comment="Tick rate" Name="DT" Type="TIME"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration Comment="Service status" Name="STATUS" Type="WSTRING"/>
+      <VarDeclaration Comment="Time stamp" Name="TS" Type="DATE_AND_TIME"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="SERVER_0_1" Type="SERVER_0_1" x="665.0" y="855.0"/>
+    <FB Name="E_SPLIT_3" Type="E_SPLIT_3" x="1710.0" y="855.0"/>
+    <FB Name="TIME2TIME" Type="TIME2TIME" x="2375.0" y="1615.0">
+      <Parameter Name="IN" Value="T#0s"/>
+    </FB>
+    <FB Name="E_DELAY" Type="E_DELAY" x="2565.0" y="285.0">
+      <Parameter Name="DT" Value="T#1s"/>
+    </FB>
+    <FB Name="E_CYCLE" Type="E_CYCLE" x="3420.0" y="380.0"/>
+    <FB Name="E_SPLIT" Type="E_SPLIT" x="2565.0" y="950.0"/>
+    <FB Name="E_INIT_CHK_D" Type="E_INIT_CHK_D" x="3990.0" y="855.0"/>
+    <FB Name="E_SPLIT_1" Type="E_SPLIT" x="4085.0" y="1615.0"/>
+    <FB Name="F_SEL" Type="F_SEL" x="5130.0" y="950.0"/>
+    <FB Name="E_REND" Type="E_REND" x="5795.0" y="1425.0"/>
+    <FB Name="F_ADD_DT_TIME_1" Type="F_ADD_DT_TIME" x="6365.0" y="760.0"/>
+    <FB Name="F_SEL_1" Type="FB_SEL_DT" x="5130.0" y="1805.0"/>
+    <DataConnections>
+      <Connection Destination="SERVER_0_1.ID" Source="ID" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SERVER_0_1.QI" Source="QI" dx1="270.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_CYCLE.DT" Source="DT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL.G" Source="E_INIT_CHK_D.Q" dx1="185.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL.IN1" Source="TIME2TIME.OUT" dx1="230.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL.IN0" Source="DT" dx1="1030.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TS" Source="F_ADD_DT_TIME_1.OUT" dx1="275.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="QO" Source="SERVER_0_1.QO" dx1="245.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="STATUS" Source="SERVER_0_1.STATUS" dx1="385.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_ADD_DT_TIME_1.IN2" Source="F_SEL.OUT" dx1="190.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL_1.QI" Source="E_INIT_CHK_D.Q" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL_1.DT0" Source="F_ADD_DT_TIME_1.OUT" dx1="0.0" dx2="0.0" dy="745.0"/>
+      <Connection Destination="F_SEL_1.DT1" Source="SERVER_0_1.RD_1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_ADD_DT_TIME_1.IN1" Source="F_SEL_1.DT" dx1="165.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="SERVER_0_1.INIT" Source="INIT" dx1="435.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SPLIT_3.EI" Source="TIME2TIME.CNF" dx1="0.0" dx2="0.0" dy="75.0"/>
+      <Connection Destination="SERVER_0_1.RSP" Source="E_SPLIT_3.E3" dx1="0.0" dx2="0.0" dy="500.0"/>
+      <Connection Destination="E_DELAY.START" Source="E_SPLIT_3.E1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_CYCLE.START" Source="E_DELAY.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SPLIT.EI" Source="E_SPLIT_3.E2" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_CYCLE.STOP" Source="E_SPLIT.EO1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_INIT_CHK_D.R" Source="E_SPLIT.EO2" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_INIT_CHK_D.REQ" Source="E_CYCLE.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SPLIT_1.EI" Source="E_INIT_CHK_D.CNF" dx1="0.0" dx2="0.0" dy="150.0"/>
+      <Connection Destination="F_SEL.REQ" Source="E_SPLIT_1.EO1" dx1="415.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_REND.EI1" Source="F_SEL.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_ADD_DT_TIME_1.REQ" Source="E_REND.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="IND" Source="F_ADD_DT_TIME_1.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INITO" Source="SERVER_0_1.INITO" dx1="155.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL_1.REQ" Source="E_SPLIT_1.EO2" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_REND.EI2" Source="F_SEL_1.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TIME2TIME.REQ" Source="SERVER_0_1.IND" dx1="315.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>

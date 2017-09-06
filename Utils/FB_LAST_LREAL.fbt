@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Returns the last value until the R event is triggered." Name="FB_LAST_LREAL">
+  <Identification Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-08-28" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="SD"/>
+      </Event>
+      <Event Comment="Reset event" Name="R" Type="Event"/>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Execution Confirmation" Name="CNF" Type="Event">
+        <With Var="RD"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input data" Name="SD" Type="LREAL"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output data" Name="RD" Type="LREAL"/>
+    </OutputVars>
+  </InterfaceList>
+  <BasicFB>
+    <InternalVars>
+      <VarDeclaration Comment="Internal Variable" InitialValue="" Name="LASTOUTPUT" Type="LREAL"/>
+      <VarDeclaration Comment="Internal Variable" InitialValue="TRUE" Name="RETURNCURRENTOUTPUT" Type="BOOL"/>
+    </InternalVars>
+    <ECC>
+      <ECState Comment="Initial State" Name="START" x="475.0" y="1125.0"/>
+      <ECState Name="SetOutput" x="1425.0" y="855.0">
+        <ECAction Algorithm="setOutput" Output="CNF"/>
+      </ECState>
+      <ECState Name="Reset" x="1040.0" y="1510.0">
+        <ECAction Algorithm="reset"/>
+      </ECState>
+      <ECTransition Comment="" Condition="REQ" Destination="SetOutput" Source="START" x="965.0" y="900.0"/>
+      <ECTransition Comment="" Condition="1" Destination="START" Source="SetOutput" x="1040.0" y="1105.0"/>
+      <ECTransition Comment="" Condition="R[RETURNCURRENTOUTPUT = FALSE]" Destination="Reset" Source="START" x="370.0" y="1440.0"/>
+      <ECTransition Comment="" Condition="1" Destination="START" Source="Reset" x="1245.0" y="1285.0"/>
+    </ECC>
+    <Algorithm Comment="Sets the output" Name="setOutput">
+      <ST Text="IF RETURNCURRENTOUTPUT THEN&#13;&#10;&#9;LASTOUTPUT := SD;&#13;&#10;&#9;RETURNCURRENTOUTPUT := FALSE;&#13;&#10;END_IF;&#13;&#10;RD := LASTOUTPUT;"/>
+    </Algorithm>
+    <Algorithm Comment="Resets the FB" Name="reset">
+      <ST Text="RETURNCURRENTOUTPUT := TRUE;"/>
+    </Algorithm>
+  </BasicFB>
+</FBType>
