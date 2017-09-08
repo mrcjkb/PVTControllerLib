@@ -17,7 +17,9 @@ IEC 61499 function block library for building forecast based energy system contr
   (see: https://www.eclipse.org/4diac/documentation/html/installation/install.html#ownFORTE)
 * Build FORTE
 * The project includes various applications that can be extracted from the Applications.zip file and copied to the project's root directory.
-​
+​* Alternatively, the Windows binary "forte.exe" and the Posix binary "forte" can be used on Windows and Linux distributions.
+  In this case, no exporting or deployment is necessary.
+
 # Documentation
 The library was created using 4diac.
 A detailed documentation of the project is in the works and a link to it will be added here as soon as it is published.
