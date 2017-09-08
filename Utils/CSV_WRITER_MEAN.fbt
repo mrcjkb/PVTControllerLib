@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Writes averaged PV system data to a CSV file." Name="CSV_WRITER_MEAN">
+  <Identification Description="This function block is intended for field testing purposes only. It should not be used in a real system, since the file size would grow indefinitely. " Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-09-08" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Request" Name="INIT" Type="Event">
+        <With Var="QI"/>
+        <With Var="FILE_NAME"/>
+        <With Var="N"/>
+      </Event>
+      <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
+        <With Var="QI"/>
+        <With Var="TS"/>
+        <With Var="PPV"/>
+        <With Var="PPVC"/>
+        <With Var="PLD"/>
+        <With Var="PBAT"/>
+        <With Var="SOC"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+        <With Var="STATUS"/>
+      </Event>
+      <Event Comment="Execution Confirmation" Name="CNF" Type="Event">
+        <With Var="QO"/>
+        <With Var="STATUS"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="Output file name" InitialValue="output.csv" Name="FILE_NAME" Type="STRING"/>
+      <VarDeclaration Comment="Averaging interval" InitialValue="T#1m" Name="N" Type="TIME"/>
+      <VarDeclaration Comment="Time stamp" Name="TS" Type="DATE_AND_TIME"/>
+      <VarDeclaration Comment="Uncurtailed PV power" Name="PPV" Type="LREAL"/>
+      <VarDeclaration Comment="Curtailed PV power" Name="PPVC" Type="LREAL"/>
+      <VarDeclaration Comment="Electric consumption" Name="PLD" Type="LREAL"/>
+      <VarDeclaration Comment="Battery transfer" Name="PBAT" Type="LREAL"/>
+      <VarDeclaration Name="SOC" Type="LREAL"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration Comment="Service status" Name="STATUS" Type="STRING"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="CSV_WRITER_6" Type="CSV_WRITER_6" x="2850.0" y="1710.0"/>
+    <FB Name="MEAN_PV" Type="F_N_MIN_MEAN_LREAL" x="1330.0" y="380.0"/>
+    <FB Name="MEAN_PV_CT" Type="F_N_MIN_MEAN_LREAL" x="1330.0" y="1235.0"/>
+    <FB Name="MEAN_LOAD" Type="F_N_MIN_MEAN_LREAL" x="1330.0" y="1995.0"/>
+    <FB Name="MEAN_BAT" Type="F_N_MIN_MEAN_LREAL" x="1330.0" y="2755.0"/>
+    <FB Name="MEAN_SOC" Type="F_N_MIN_MEAN_LREAL" x="1330.0" y="3515.0"/>
+    <DataConnections>
+      <Connection Destination="MEAN_PV.N" Source="N" dx1="625.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_PV.TSI" Source="TS" dx1="625.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_PV.X" Source="PPV" dx1="670.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CSV_WRITER_6.SD_2" Source="MEAN_PV.Y" dx1="1990.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CSV_WRITER_6.SD_1" Source="MEAN_PV.TSO" dx1="2005.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CSV_WRITER_6.SD_3" Source="MEAN_PV_CT.Y" dx1="1950.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_PV_CT.TSI" Source="TS" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_PV_CT.X" Source="PPVC" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_PV_CT.N" Source="N" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_LOAD.N" Source="N" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_LOAD.TSI" Source="TS" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_LOAD.X" Source="PLD" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_BAT.N" Source="N" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_BAT.TSI" Source="TS" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_BAT.X" Source="PBAT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_SOC.N" Source="N" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_SOC.TSI" Source="TS" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_SOC.X" Source="SOC" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CSV_WRITER_6.SD_4" Source="MEAN_LOAD.Y" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CSV_WRITER_6.SD_5" Source="MEAN_BAT.Y" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CSV_WRITER_6.SD_6" Source="MEAN_SOC.Y" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CSV_WRITER_6.QI" Source="QI" dx1="2290.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CSV_WRITER_6.FILE_NAME" Source="FILE_NAME" dx1="2355.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="QO" Source="CSV_WRITER_6.QO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="STATUS" Source="CSV_WRITER_6.STATUS" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="MEAN_PV.REQ" Source="REQ" dx1="880.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="MEAN_PV_CT.REQ" Source="MEAN_PV.CNF0" dx1="0.0" dx2="0.0" dy="175.0"/>
+      <Connection Destination="MEAN_PV_CT.REQ" Source="MEAN_PV.CNF1" dx1="0.0" dx2="0.0" dy="205.0"/>
+      <Connection Destination="MEAN_LOAD.REQ" Source="MEAN_PV_CT.CNF1" dx1="0.0" dx2="0.0" dy="215.0"/>
+      <Connection Destination="MEAN_LOAD.REQ" Source="MEAN_PV_CT.CNF0" dx1="0.0" dx2="0.0" dy="185.0"/>
+      <Connection Destination="MEAN_BAT.REQ" Source="MEAN_LOAD.CNF1" dx1="0.0" dx2="0.0" dy="200.0"/>
+      <Connection Destination="MEAN_BAT.REQ" Source="MEAN_LOAD.CNF0" dx1="0.0" dx2="0.0" dy="165.0"/>
+      <Connection Destination="MEAN_SOC.REQ" Source="MEAN_BAT.CNF1" dx1="0.0" dx2="0.0" dy="200.0"/>
+      <Connection Destination="MEAN_SOC.REQ" Source="MEAN_BAT.CNF0" dx1="0.0" dx2="0.0" dy="160.0"/>
+      <Connection Destination="CSV_WRITER_6.REQ" Source="MEAN_SOC.CNF1" dx1="495.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CSV_WRITER_6.INIT" Source="INIT" dx1="2385.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INITO" Source="CSV_WRITER_6.INITO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CNF" Source="CSV_WRITER_6.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>
