@@ -6,8 +6,8 @@
   <InterfaceList>
     <EventInputs>
       <Event Comment="Initialization Request" Name="INIT" Type="Event">
-        <With Var="ID"/>
         <With Var="QI"/>
+        <With Var="ID"/>
       </Event>
       <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
         <With Var="QI"/>
@@ -42,12 +42,8 @@
     <FB Name="E_SWITCH_1" Type="E_SWITCH" x="3135.0" y="1045.0"/>
     <FB Name="E_SWITCH_2" Type="E_SWITCH" x="2470.0" y="1805.0"/>
     <FB Name="E_MERGE_1" Type="E_MERGE" x="3135.0" y="285.0"/>
-    <FB Name="RECONNECT" Type="E_DELAY" x="4370.0" y="1045.0">
-      <Parameter Name="DT" Value="T#5s"/>
-    </FB>
-    <FB Name="E_MERGE_2" Type="E_MERGE" x="4370.0" y="285.0"/>
-    <FB Name="E_SPLIT" Type="E_SPLIT" x="3800.0" y="950.0"/>
     <DataConnections>
+      <Connection Destination="CLIENT_0_1.QI" Source="QI" dx1="150.0" dx2="0.0" dy="0.0"/>
       <Connection Destination="CLIENT_0_1.ID" Source="ID" dx1="0.0" dx2="0.0" dy="0.0"/>
       <Connection Destination="E_SWITCH.G" Source="E_TF.Q" dx1="0.0" dx2="0.0" dy="0.0"/>
       <Connection Destination="E_SWITCH_1.G" Source="CLIENT_0_1.QO" dx1="1255.0" dx2="0.0" dy="0.0"/>
@@ -55,7 +51,6 @@
       <Connection Destination="STATUS" Source="CLIENT_0_1.STATUS" dx1="3885.0" dx2="0.0" dy="0.0"/>
       <Connection Destination="QO" Source="CLIENT_0_1.QO" dx1="190.0" dx2="0.0" dy="0.0"/>
       <Connection Destination="RD_1" Source="CLIENT_0_1.RD_1" dx1="4020.0" dx2="0.0" dy="0.0"/>
-      <Connection Destination="CLIENT_0_1.QI" Source="QI" dx1="0.0" dx2="0.0" dy="0.0"/>
     </DataConnections>
     <EventConnections>
       <Connection Destination="E_TF.TRUE" Source="INIT" dx1="1470.0" dx2="0.0" dy="0.0"/>
@@ -67,14 +62,10 @@
       <Connection Destination="CNF" Source="E_SWITCH_1.EO1" dx1="150.0" dx2="0.0" dy="0.0"/>
       <Connection Destination="E_SWITCH_2.EI" Source="E_SWITCH.EO0" dx1="0.0" dx2="0.0" dy="0.0"/>
       <Connection Destination="E_MERGE.EI2" Source="E_SWITCH_2.EO1" dx1="0.0" dx2="0.0" dy="740.0"/>
+      <Connection Destination="E_TF.FALSE" Source="E_SWITCH_1.EO0" dx1="0.0" dx2="0.0" dy="105.0"/>
       <Connection Destination="E_MERGE_1.EI1" Source="E_SWITCH.EO1" dx1="125.0" dx2="0.0" dy="0.0"/>
       <Connection Destination="E_MERGE_1.EI2" Source="E_SWITCH_2.EO0" dx1="85.0" dx2="0.0" dy="0.0"/>
-      <Connection Destination="E_TF.FALSE" Source="RECONNECT.EO" dx1="0.0" dx2="0.0" dy="1515.0"/>
-      <Connection Destination="E_SPLIT.EI" Source="E_SWITCH_1.EO0" dx1="0.0" dx2="0.0" dy="0.0"/>
-      <Connection Destination="RECONNECT.START" Source="E_SPLIT.EO2" dx1="0.0" dx2="0.0" dy="0.0"/>
-      <Connection Destination="E_MERGE_2.EI2" Source="E_SPLIT.EO1" dx1="0.0" dx2="0.0" dy="0.0"/>
-      <Connection Destination="INITO" Source="E_MERGE_2.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
-      <Connection Destination="E_MERGE_2.EI1" Source="E_MERGE_1.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INITO" Source="E_MERGE_1.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
     </EventConnections>
   </FBNetwork>
 </FBType>
