@@ -31,7 +31,7 @@
     <InputVars>
       <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
       <VarDeclaration Comment="Time frame to forecast ahead (and look back) in h" InitialValue="15" Name="TLF" Type="LREAL"/>
-      <VarDeclaration Comment="Measured PV power in W" Name="P" Type="LREAL"/>
+      <VarDeclaration Comment="Measured load in W" Name="P" Type="LREAL"/>
       <VarDeclaration Comment="Day of the year [1..365]" InitialValue="1" Name="DOY" Type="UINT"/>
       <VarDeclaration Comment="Time of day [min] [0..1439]" InitialValue="0" Name="TD" Type="UINT"/>
     </InputVars>
