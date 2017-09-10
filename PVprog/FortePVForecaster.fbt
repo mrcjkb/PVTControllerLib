@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Forte variant of the PVForecaste FB." Name="FortePVForecaster">
+  <Identification Description="This function block creates a back up of its forecast data which can be re-loaded if the device has to restart. Otherwise, it is exactly the same as the PVForecaster FB." Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-09-10" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Service Initialization" Name="INIT" Type="Event">
+        <With Var="QI"/>
+        <With Var="TLB"/>
+        <With Var="TLF"/>
+      </Event>
+      <Event Comment="PV Forecast Update Request" Name="UD" Type="Event">
+        <With Var="P"/>
+        <With Var="DOY"/>
+        <With Var="TD"/>
+      </Event>
+      <Event Comment="Forecast Request" Name="FREQ" Type="Event">
+        <With Var="TD"/>
+      </Event>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+      </Event>
+      <Event Comment="Update Algorithm Execution Confirmation" Name="UDCNF" Type="Event"/>
+      <Event Comment="Forecast Confirmation" Name="FCNF" Type="Event">
+        <With Var="PF"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Event Input Qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="Time frame to look back when generating forecasts in h" Name="TLB" Type="LREAL"/>
+      <VarDeclaration Comment="Time frame to forecast ahead (look forward) in h" Name="TLF" Type="LREAL"/>
+      <VarDeclaration Comment="Measured PV power in W" Name="P" Type="LREAL"/>
+      <VarDeclaration Comment="Day of the year [1..365]" Name="DOY" Type="UINT"/>
+      <VarDeclaration Comment="Time of day [min] [0..1439]" Name="TD" Type="UINT"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Event Output Qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration ArraySize="96" Comment="Forecasted PV power" InitialValue="" Name="PF" Type="LREAL"/>
+    </OutputVars>
+  </InterfaceList>
+  <Service Comment="Forte variant of the PVForecaste FB." LeftInterface="APPLICATION" RightInterface="RESOURCE"/>
+</FBType>
