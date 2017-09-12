@@ -17,6 +17,7 @@
       <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
         <With Var="QO"/>
         <With Var="STATUS"/>
+        <With Var="TIMEOUTO"/>
       </Event>
     </EventOutputs>
     <InputVars>
@@ -26,6 +27,7 @@
     <OutputVars>
       <VarDeclaration Comment="Event Output Qualifier" Name="QO" Type="BOOL"/>
       <VarDeclaration Comment="Service Status" Name="STATUS" Type="WSTRING"/>
+      <VarDeclaration Comment="The timeout that has actually been set." Name="TIMEOUTO" Type="TIME"/>
     </OutputVars>
   </InterfaceList>
   <Service Comment="Service Interface Function Block Type" LeftInterface="APPLICATION" RightInterface="RESOURCE">

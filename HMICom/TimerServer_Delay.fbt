@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE FBType SYSTEM "http://www.holobloc.com/xml/LibraryElement.dtd">
+<FBType Comment="Updates time upon every REQ event and can be used to request time remotely." Name="TimerServer_Delay">
+  <Identification Standard="61499-2"/>
+  <VersionInfo Author="Marc Jakobi" Date="2017-09-05" Organization="HTW Berlin" Version="1.0"/>
+  <InterfaceList>
+    <EventInputs>
+      <Event Comment="Initialization Request" Name="INIT" Type="Event">
+        <With Var="QI"/>
+        <With Var="ID"/>
+        <With Var="DT_MIN"/>
+      </Event>
+      <Event Comment="Service Request Event" Name="REQ" Type="Event"/>
+    </EventInputs>
+    <EventOutputs>
+      <Event Comment="Initialization Confirm" Name="INITO" Type="Event">
+        <With Var="QO"/>
+        <With Var="STATUS"/>
+      </Event>
+      <Event Comment="Service Indication" Name="CNF" Type="Event">
+        <With Var="TS"/>
+      </Event>
+    </EventOutputs>
+    <InputVars>
+      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
+      <VarDeclaration Comment="Connection identifier" Name="ID" Type="WSTRING"/>
+      <VarDeclaration Name="DT_MIN" Type="TIME"/>
+    </InputVars>
+    <OutputVars>
+      <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
+      <VarDeclaration Comment="Service status" Name="STATUS" Type="WSTRING"/>
+      <VarDeclaration Comment="Time stamp" Name="TS" Type="DATE_AND_TIME"/>
+    </OutputVars>
+  </InterfaceList>
+  <FBNetwork>
+    <FB Name="FB_SYS_DT" Type="FB_SYS_DT" x="1615.0" y="475.0"/>
+    <FB Name="SERVER_0" Type="SERVER_1_0" x="570.0" y="570.0"/>
+    <FB Name="FB_SHIFT1_DT" Type="FB_SHIFT1_DT" x="2280.0" y="1425.0"/>
+    <FB Name="F_SUB_DT_DT" Type="F_SUB_DT_DT" x="2945.0" y="1425.0"/>
+    <FB Name="F_SUB" Type="F_SUB" x="3705.0" y="1710.0"/>
+    <FB Name="F_MAX" Type="F_MAX" x="4845.0" y="1805.0">
+      <Parameter Name="IN2" Value="T#0s"/>
+    </FB>
+    <FB Name="TIME2TIME" Type="TIME2TIME" x="4180.0" y="1805.0"/>
+    <FB Name="E_DELAY" Type="E_DELAY" x="5625.0" y="1475.0"/>
+    <DataConnections>
+      <Connection Destination="TS" Source="FB_SYS_DT.SDT" dx1="655.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SERVER_0.QI" Source="QI" dx1="175.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SERVER_0.ID" Source="ID" dx1="135.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="QO" Source="SERVER_0.QO" dx1="4280.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="STATUS" Source="SERVER_0.STATUS" dx1="4715.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SERVER_0.SD_1" Source="FB_SYS_DT.SDT" dx1="0.0" dx2="0.0" dy="310.0"/>
+      <Connection Destination="FB_SHIFT1_DT.I" Source="FB_SYS_DT.SDT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SUB_DT_DT.IN1" Source="FB_SHIFT1_DT.O1" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SUB_DT_DT.IN2" Source="FB_SHIFT1_DT.O2" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SUB.IN2" Source="F_SUB_DT_DT.OUT" dx1="190.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SUB.IN1" Source="DT_MIN" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TIME2TIME.IN" Source="F_SUB.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MAX.IN1" Source="TIME2TIME.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_DELAY.DT" Source="F_MAX.OUT" dx1="170.0" dx2="0.0" dy="0.0"/>
+    </DataConnections>
+    <EventConnections>
+      <Connection Destination="SERVER_0.INIT" Source="INIT" dx1="240.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INITO" Source="SERVER_0.INITO" dx1="215.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_SYS_DT.REQ" Source="REQ" dx1="2940.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="SERVER_0.RSP" Source="SERVER_0.IND" dx1="0.0" dx2="0.0" dy="-250.0"/>
+      <Connection Destination="F_SUB_DT_DT.REQ" Source="FB_SHIFT1_DT.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SUB.REQ" Source="F_SUB_DT_DT.CNF" dx1="280.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="FB_SHIFT1_DT.REQ" Source="FB_SYS_DT.CNF" dx1="170.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="TIME2TIME.REQ" Source="F_SUB.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_MAX.REQ" Source="TIME2TIME.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_DELAY.START" Source="F_MAX.CNF" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CNF" Source="E_DELAY.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+    </EventConnections>
+  </FBNetwork>
+</FBType>
