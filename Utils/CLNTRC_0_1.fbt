@@ -6,8 +6,8 @@
   <InterfaceList>
     <EventInputs>
       <Event Comment="Initialization Request" Name="INIT" Type="Event">
-        <With Var="QI"/>
         <With Var="ID"/>
+        <With Var="QI"/>
       </Event>
       <Event Comment="Normal Execution Request" Name="REQ" Type="Event">
         <With Var="QI"/>
@@ -25,8 +25,8 @@
       </Event>
     </EventOutputs>
     <InputVars>
-      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
       <VarDeclaration Comment="Connection Identifier" Name="ID" Type="WSTRING"/>
+      <VarDeclaration Comment="Input event qualifier" Name="QI" Type="BOOL"/>
     </InputVars>
     <OutputVars>
       <VarDeclaration Comment="Output event qualifier" Name="QO" Type="BOOL"/>
@@ -35,37 +35,46 @@
     </OutputVars>
   </InterfaceList>
   <FBNetwork>
-    <FB Name="CLIENT_0_1" Type="CLIENT_0_1" x="1615.0" y="1140.0"/>
-    <FB Name="E_TF" Type="E_TF" x="475.0" y="475.0"/>
-    <FB Name="E_SWITCH" Type="E_SWITCH" x="2375.0" y="475.0"/>
-    <FB Name="E_MERGE" Type="E_MERGE" x="950.0" y="1045.0"/>
-    <FB Name="E_SWITCH_1" Type="E_SWITCH" x="3135.0" y="1045.0"/>
-    <FB Name="E_SWITCH_2" Type="E_SWITCH" x="2470.0" y="1805.0"/>
-    <FB Name="E_MERGE_1" Type="E_MERGE" x="3135.0" y="285.0"/>
+    <FB Name="CLIENT_0_1" Type="CLIENT_0_1" x="2185.0" y="950.0"/>
+    <FB Name="E_TF" Type="E_TF" x="475.0" y="380.0"/>
+    <FB Name="E_SWITCH" Type="E_SWITCH" x="3135.0" y="285.0"/>
+    <FB Name="E_MERGE" Type="E_MERGE" x="475.0" y="950.0"/>
+    <FB Name="E_SWITCH_1" Type="E_SWITCH" x="3895.0" y="855.0"/>
+    <FB Name="E_SWITCH_2" Type="E_SWITCH" x="3135.0" y="1615.0"/>
+    <FB Name="E_DELAY" Type="E_DELAY" x="3895.0" y="1615.0">
+      <Parameter Name="DT" Value="T#5s"/>
+    </FB>
+    <FB Name="E_TF_1" Type="E_TF" x="475.0" y="1710.0"/>
+    <FB Name="F_SEL" Type="F_SEL" x="1520.0" y="95.0"/>
     <DataConnections>
-      <Connection Destination="CLIENT_0_1.QI" Source="QI" dx1="150.0" dx2="0.0" dy="0.0"/>
       <Connection Destination="CLIENT_0_1.ID" Source="ID" dx1="0.0" dx2="0.0" dy="0.0"/>
-      <Connection Destination="E_SWITCH.G" Source="E_TF.Q" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH.G" Source="E_TF.Q" dx1="2390.0" dx2="0.0" dy="0.0"/>
       <Connection Destination="E_SWITCH_1.G" Source="CLIENT_0_1.QO" dx1="1255.0" dx2="0.0" dy="0.0"/>
-      <Connection Destination="E_SWITCH_2.G" Source="CLIENT_0_1.QO" dx1="190.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH_2.G" Source="CLIENT_0_1.QO" dx1="245.0" dx2="0.0" dy="0.0"/>
       <Connection Destination="STATUS" Source="CLIENT_0_1.STATUS" dx1="3885.0" dx2="0.0" dy="0.0"/>
-      <Connection Destination="QO" Source="CLIENT_0_1.QO" dx1="190.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="QO" Source="CLIENT_0_1.QO" dx1="245.0" dx2="0.0" dy="0.0"/>
       <Connection Destination="RD_1" Source="CLIENT_0_1.RD_1" dx1="4020.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL.G" Source="E_TF.Q" dx1="365.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL.IN1" Source="QI" dx1="1230.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="F_SEL.IN0" Source="E_TF_1.Q" dx1="505.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CLIENT_0_1.QI" Source="F_SEL.OUT" dx1="0.0" dx2="0.0" dy="0.0"/>
     </DataConnections>
     <EventConnections>
-      <Connection Destination="E_TF.TRUE" Source="INIT" dx1="1470.0" dx2="0.0" dy="0.0"/>
-      <Connection Destination="CLIENT_0_1.INIT" Source="E_TF.EO" dx1="690.0" dx2="0.0" dy="0.0"/>
-      <Connection Destination="E_SWITCH.EI" Source="CLIENT_0_1.INITO" dx1="165.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_TF.TRUE" Source="INIT" dx1="760.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH.EI" Source="CLIENT_0_1.INITO" dx1="165.0" dx2="0.0" dy="155.0"/>
       <Connection Destination="E_MERGE.EI1" Source="REQ" dx1="200.0" dx2="0.0" dy="0.0"/>
-      <Connection Destination="CLIENT_0_1.REQ" Source="E_MERGE.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
-      <Connection Destination="E_SWITCH_1.EI" Source="CLIENT_0_1.CNF" dx1="1305.0" dx2="0.0" dy="0.0"/>
       <Connection Destination="CNF" Source="E_SWITCH_1.EO1" dx1="150.0" dx2="0.0" dy="0.0"/>
-      <Connection Destination="E_SWITCH_2.EI" Source="E_SWITCH.EO0" dx1="0.0" dx2="0.0" dy="0.0"/>
-      <Connection Destination="E_MERGE.EI2" Source="E_SWITCH_2.EO1" dx1="0.0" dx2="0.0" dy="740.0"/>
-      <Connection Destination="E_TF.FALSE" Source="E_SWITCH_1.EO0" dx1="0.0" dx2="0.0" dy="105.0"/>
-      <Connection Destination="E_MERGE_1.EI1" Source="E_SWITCH.EO1" dx1="125.0" dx2="0.0" dy="0.0"/>
-      <Connection Destination="E_MERGE_1.EI2" Source="E_SWITCH_2.EO0" dx1="85.0" dx2="0.0" dy="0.0"/>
-      <Connection Destination="INITO" Source="E_MERGE_1.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH_2.EI" Source="E_SWITCH.EO0" dx1="170.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_MERGE.EI2" Source="E_DELAY.EO" dx1="0.0" dx2="-265.0" dy="935.0"/>
+      <Connection Destination="E_DELAY.START" Source="E_SWITCH_2.EO1" dx1="540.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_SWITCH_1.EI" Source="CLIENT_0_1.CNF" dx1="1850.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CLIENT_0_1.REQ" Source="E_MERGE.EO" dx1="175.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="INITO" Source="E_SWITCH.EO1" dx1="1230.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="E_TF_1.TRUE" Source="E_SWITCH_2.EO0" dx1="170.0" dx2="-220.0" dy="475.0"/>
+      <Connection Destination="E_TF_1.FALSE" Source="E_SWITCH_1.EO0" dx1="0.0" dx2="0.0" dy="895.0"/>
+      <Connection Destination="E_TF.FALSE" Source="E_TF_1.EO" dx1="0.0" dx2="0.0" dy="410.0"/>
+      <Connection Destination="F_SEL.REQ" Source="E_TF.EO" dx1="0.0" dx2="0.0" dy="0.0"/>
+      <Connection Destination="CLIENT_0_1.INIT" Source="F_SEL.CNF" dx1="120.0" dx2="-185.0" dy="0.0"/>
     </EventConnections>
   </FBNetwork>
 </FBType>
