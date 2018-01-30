@@ -23,7 +23,7 @@ IEC 61499 function block library for building forecast based energy system contr
 
 # Documentation
 The library was created using 4diac.
-A detailed documentation of the project is in the works and a link to it will be added here as soon as it is published.
+A detailed documentation of the project is available at: http://pvspeicher.htw-berlin.de/wp-content/uploads/2017/11/Jakobi-2017-Development-of-model-based-control-applications-compliant-with-IEC-61499.pdf
 
 # Side notes
 * To use the FortePVForecaster and ForteLoadForecaster SIFBs instead of the regular PVForecaster and LoadForecaster BFBs, the exported PVForecaster and LoadForecaster source files have to be changed.
