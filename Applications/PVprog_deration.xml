@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<org.fordiac.ide.model.ui:UIFBNetwork xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:org.fordiac.ide.model.ui="org.fordiac.ide.model.ui">
+  <fbNetwork>
+    <application href="PVTController.xml#//@application.12"/>
+  </fbNetwork>
+</org.fordiac.ide.model.ui:UIFBNetwork>
