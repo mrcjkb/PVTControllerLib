@@ -1,4 +1,14 @@
 # PVTControllerLib
+
+> [![Maintenance](https://img.shields.io/badge/Maintained%3F-no-red.svg)](https://bitbucket.org/lbesson/ansi-colors)
+> 
+> __NOTE:__
+>
+> This was developed for my master's thesis, and is not actively maintained.
+> I can povide no guarantees that it will work with the latest versions of 4diac-IDE and FORTE.
+> I will gladly review any PRs.
+
+
 IEC 61499 function block library for building forecast based energy system control applications.
 ​
 # Requires
